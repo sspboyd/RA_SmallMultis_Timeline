@@ -10,6 +10,8 @@ final float PHI = 0.618033989;
 
 // Declare Font Variables
 PFont mainTitleF;
+PFont rowLabelF;
+PFont scaleTicksF;
 
 boolean PDFOUT = false;
 
@@ -20,8 +22,10 @@ float PLOT_X1, PLOT_X2, PLOT_Y1, PLOT_Y2, PLOT_W, PLOT_H;
 
 //Declare Globals
 JSONObject raj; // This is the variable that we load the JSON file into. It's not much use to us after that.
-JSONArray snapshots; // This is the variable that holds all the 'snapshots' recorded by Reporter App. We'll use this variable a lot.
-ArrayList<SnapEntry> snapList = new ArrayList();
+ArrayList<SnapEntry> snapList;
+StringList roomList;
+String q = "Which room are you in?";
+
 
 
 
@@ -37,7 +41,8 @@ void setup() {
     size(800, 450, PDF, generateSaveImgFileName(".pdf"));
   }
   else {
-    size(1300, 650); // quarter page size
+    // size(1300, 650);
+    size(1300, 650);
   }
 
   margin = width * pow(PHI, 6);
@@ -53,16 +58,63 @@ void setup() {
   rSn = 47; // 29, 18;
   randomSeed(rSn);
 
-  mainTitleF = createFont("Helvetica", 18);  //requires a font file in the data folder?
+  mainTitleF  = loadFont("HelveticaNeue-14.vlw");  //requires a font file in the data folder?
+  rowLabelF   = loadFont("HelveticaNeue-14.vlw");  //requires a font file in the data folder?
+  mainTitleF  = loadFont("HelveticaNeue-Light-36.vlw");  //requires a font file in the data folder?
+
+  roomList = new StringList();
 
   raj = loadJSONObject("reporter-export-20141129.json"); // this file has to be in your /data directory. I've included a small sample file.
   // raj = loadJSONObject("reporter-export-20140903.json"); // this file has to be in your /data directory. I've included a small sample file.
-  snapshots = raj.getJSONArray("snapshots"); 
-  String q = "Which room are you in?";
+  JSONArray snapshots = raj.getJSONArray("snapshots"); // This is the variable that holds all the 'snapshots' recorded by Reporter App. 
+  snapList = loadSnapEntries(snapshots);
+
+  StringList rooms = new StringList();
+  rooms.append("Main room");
+  rooms.append("Bedroom");
+  rooms.append("My den");
+  rooms.append("My office at CBC");
+  rooms.append("Outside");
+  rooms.append("The kitchen");
+  rooms.append("Patio");
+  rooms.append("9A204 CBC mtg room");
+  rooms.append("Backyard");
+  rooms.append("Lexus");
+  rooms.append("Locker room");
+  rooms.append("Heaton's office");
+  rooms.append("Dining room");
+  rooms.append("Screened in porch");
+  rooms.append("The dock");
+/**/
+
+  renderTimeline(rooms);
+  renderTitle();
+
+  println("snapList size = " + snapList.size());
+  // println("roomList = " + roomList);
+  println("setup done: " + nf(millis() / 1000.0, 1, 2));
+  noLoop();
+}
+
+
+void draw() {
+  //background(255);
+  fill(255,10);
+  textFont(rowLabelF);
+  text("sspboyd", PLOT_X2-textWidth("sspboyd"), PLOT_Y2);
+
+
+  if (PDFOUT) exit();
+}
+
+
+ArrayList<SnapEntry> loadSnapEntries(JSONArray _snapshots){
+  ArrayList<SnapEntry> _snapList = new ArrayList();
+
   // Create snapshot objects for each snapshot
   // Begin parsing the JSON from Reporter App
-  for (int i = 0; i < snapshots.size(); i+=1) { // iterate through every snapshot in the snapshots array...
-    JSONObject snap = snapshots.getJSONObject(i); // create a new json object (snap) with the current snapshot
+  for (int i = 0; i < _snapshots.size(); i+=1) { // iterate through every snapshot in the snapshots array...
+    JSONObject snap = _snapshots.getJSONObject(i); // create a new json object (snap) with the current snapshot
     // create a new SnapEntry object for this snapshot
     SnapEntry s = new SnapEntry();
     
@@ -86,81 +138,53 @@ void setup() {
         }
         if (resp.hasKey("tokens")) {  // again, check to see if the resp JSONObject has a key called "tokens"
           JSONArray ans = resp.getJSONArray("tokens"); // create another JSONArray of the answers
-          if(ans.size() > 1) println("ans has more than one room: " + ans);
+          if(ans.size() > 1) println("ans @ " + sdts + " has more than one room: \n" + ans);
           if(ans.size() < 1) println("ans has no rooms! ->" + ans);
           if(ans.size() > 0){
             JSONObject ansRm = ans.getJSONObject(0);
             // println("ansRm: "+ansRm);
             String rm = ansRm.getString("text");
-            s.room = rm;
             // println("rm: "+rm);
+            s.room = rm;
+            if(!roomList.hasValue(rm)) roomList.append(rm);
           }
         }
       }
     }
-    if(s.room != null){
-      snapList.add(s);
-    }
+    if(s.room != null) _snapList.add(s);
   }
-
-  println("snapList size = " + snapList.size());
-
-  StringList rooms = new StringList();
-  rooms.append("Main room");
-  rooms.append("Bedroom");
-  rooms.append("My den");
-  rooms.append("My office at CBC");
-  rooms.append("Outside");
-  rooms.append("The kitchen");
-  rooms.append("Patio");
-  rooms.append("9A204 CBC mtg room");
-  rooms.append("Backyard");
-  rooms.append("Lexus");
-
-  renderTimeline(rooms);
-
-  println("setup done: " + nf(millis() / 1000.0, 1, 2));
-  noLoop();
-}
-
-void draw() {
-  //background(255);
-  fill(0);
-  textFont(mainTitleF);
-  // text("sspboyd", PLOT_X2-textWidth("sspboyd"), PLOT_Y2);
-
-
-  if (PDFOUT) exit();
+  return _snapList;
 }
 
 void renderTimeline(StringList rms){
-    // next step is to pick a room and make a chart showing when 
+  // next step is to pick a room and make a chart showing when 
   // I'm in that room (0-24hrs)
   // create some chart dimensions
   // room |_______________________________| 
   float chart_X1, chart_X2, chart_Y1, chart_Y2, chart_W, chart_H;
+  textFont(rowLabelF);
   chart_X1 = PLOT_X1;
   chart_X2 = PLOT_X2;
   chart_W = chart_X2 - chart_X1;
-  chart_H = PLOT_H/(rms.size());
-  chart_Y1 = PLOT_Y1;
+  chart_H = ((PLOT_H - (PLOT_H * pow(PHI, 4))) - textAscent() *2 ) / (rms.size()); // textAscent included to account for top scale #s
+  // chart_Y1 = PLOT_Y1;
+  chart_Y1 = (PLOT_Y1 + (PLOT_H * pow(PHI, 4)));
   chart_Y2 = PLOT_Y1 + chart_H;
 
   // put hour indicators along the scale
   for (int i = 0; i < 25; i+=3) {
-    float xpos = map(i, 0, 24, chart_X1+chart_W*pow(PHI,3), chart_X2);
+    float xpos = map(i, 0, 24, chart_X1+chart_W*pow(PHI,4), chart_X2);
     if(i==24) xpos = chart_X2-textWidth("24");
-    fill(255,200);
-    textSize(14);
-    text(i, xpos, PLOT_Y1-5);    
+    fill(255,175);
+    textFont(rowLabelF);
+    text(i, xpos, chart_Y1);    
   }
-
 
   int cntr=0;
   for (String rm : rms) {
 
-    chart_Y1 = PLOT_Y1 + (chart_H * cntr);
-    chart_Y2 = chart_Y1 + chart_H-5;
+    chart_Y1 = (PLOT_Y1 + (PLOT_H * pow(PHI, 4))) + textAscent() + 5 + (chart_H * cntr);
+    chart_Y2 = chart_Y1 + chart_H - 15;
 
     String r = rm;
     // create an ArrayList of SnapEntries 
@@ -181,49 +205,35 @@ void renderTimeline(StringList rms){
 
       secOfDay = (hours*60*60) + (minutes*60) + seconds;
 
-      float seXPos = map(secOfDay, 0, (24*60*60), chart_X1+chart_W*pow(PHI,3), chart_X2);
-      stroke(76,76,255,200);
+      float seXPos = map(secOfDay, 0, (24*60*60), chart_X1+chart_W*pow(PHI,4), chart_X2);
+      stroke(76,76,255,120);
+      strokeWeight(5);
       line(seXPos, chart_Y1, seXPos, chart_Y2);
       stroke(0);
       // line(chart_X1+chart_W*pow(PHI,4), chart_Y1,chart_X1+chart_W*pow(PHI,4), chart_Y2);
       noFill();
       // rectMode(CORNERS);
-      // rect(chart_X1+chart_W*pow(PHI,3),chart_Y1, chart_X2, chart_Y2);
+      // rect(chart_X1+chart_W*pow(PHI,4),chart_Y1, chart_X2, chart_Y2);
     }
+
     fill(255,200);
-    textFont(mainTitleF);
-    textSize(18);
+    textFont(rowLabelF);
+    // textSize(18);
     text(r, chart_X1, chart_Y2);
+
+    if (cntr < rms.size()-1) {
+      stroke(255, 18);
+      strokeWeight(.5);
+      line(chart_X1, chart_Y2 + chart_H*.25, chart_X2, chart_Y2 + chart_H*.25);
+     } 
     cntr += 1;
   }
 
 }
 
-void keyPressed() {
-  if (key == 'S') screenCap(".tif");
-}
 
-void mousePressed() {
-}
-
-String generateSaveImgFileName(String fileType) {
-  String fileName;
-  // save functionality in here
-  String outputDir = "out/";
-  String sketchName = getSketchName() + "-";
-  String randomSeedNum = "rS" + rSn + "-";
-  String dateTimeStamp = "" + year() + nf(month(), 2) + nf(day(), 2) + nf(hour(), 2) + nf(minute(), 2) + nf(second(), 2);
-  fileName = outputDir + sketchName + dateTimeStamp + randomSeedNum + fileType;
-  return fileName;
-}
-
-void screenCap(String fileType) {
-  String saveName = generateSaveImgFileName(fileType);
-  save(saveName);
-  println("Screen shot saved to: " + saveName);
-}
-
-String getSketchName() {
-  String[] path = split(sketchPath, "/");
-  return path[path.length-1];
+void renderTitle(){
+  textFont(mainTitleF);
+  fill(255,200);
+  text("Which room are you in?", PLOT_X1, PLOT_Y1+textAscent());
 }
