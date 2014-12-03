@@ -19,15 +19,11 @@ boolean PDFOUT = false;
 float margin;
 float PLOT_X1, PLOT_X2, PLOT_Y1, PLOT_Y2, PLOT_W, PLOT_H;
 
-
 //Declare Globals
 JSONObject raj; // This is the variable that we load the JSON file into. It's not much use to us after that.
 ArrayList<SnapEntry> snapList;
 StringList roomList;
 String q = "Which room are you in?";
-
-
-
 
 
 
@@ -46,7 +42,7 @@ void setup() {
   }
 
   margin = width * pow(PHI, 6);
-  println("margin: " + margin);
+
   PLOT_X1 = margin;
   PLOT_X2 = width-margin;
   PLOT_Y1 = margin;
@@ -54,20 +50,20 @@ void setup() {
   PLOT_W = PLOT_X2 - PLOT_X1;
   PLOT_H = PLOT_Y2 - PLOT_Y1;
 
-
   rSn = 47; // 29, 18;
   randomSeed(rSn);
+  smooth(4);
 
   mainTitleF  = loadFont("HelveticaNeue-14.vlw");  //requires a font file in the data folder?
   rowLabelF   = loadFont("HelveticaNeue-14.vlw");  //requires a font file in the data folder?
   mainTitleF  = loadFont("HelveticaNeue-Light-36.vlw");  //requires a font file in the data folder?
 
-  roomList = new StringList();
-
   raj = loadJSONObject("reporter-export-20141129.json"); // this file has to be in your /data directory. I've included a small sample file.
   // raj = loadJSONObject("reporter-export-20140903.json"); // this file has to be in your /data directory. I've included a small sample file.
+  
+  roomList = new StringList();
   JSONArray snapshots = raj.getJSONArray("snapshots"); // This is the variable that holds all the 'snapshots' recorded by Reporter App. 
-  snapList = loadSnapEntries(snapshots);
+  snapList = loadSnapEntries(snapshots); // The loadSnapEntries() function will take the snapshots JSONArray and create an ArrayList of SnapEntries
 
   StringList rooms = new StringList();
   rooms.append("Main room");
@@ -90,6 +86,8 @@ void setup() {
   renderTimeline(rooms);
   renderTitle();
 
+  // Debug / Status info
+  println("margin: " + margin);
   println("snapList size = " + snapList.size());
   // println("roomList = " + roomList);
   println("setup done: " + nf(millis() / 1000.0, 1, 2));
@@ -97,12 +95,16 @@ void setup() {
 }
 
 
+
+/*////////////////////////////////////////
+ DRAW
+ ////////////////////////////////////////*/
+
 void draw() {
   //background(255);
-  fill(255,10);
+  fill(255,18);
   textFont(rowLabelF);
   text("sspboyd", PLOT_X2-textWidth("sspboyd"), PLOT_Y2);
-
 
   if (PDFOUT) exit();
 }
@@ -111,10 +113,9 @@ void draw() {
 ArrayList<SnapEntry> loadSnapEntries(JSONArray _snapshots){
   ArrayList<SnapEntry> _snapList = new ArrayList();
 
-  // Create snapshot objects for each snapshot
-  // Begin parsing the JSON from Reporter App
   for (int i = 0; i < _snapshots.size(); i+=1) { // iterate through every snapshot in the snapshots array...
     JSONObject snap = _snapshots.getJSONObject(i); // create a new json object (snap) with the current snapshot
+
     // create a new SnapEntry object for this snapshot
     SnapEntry s = new SnapEntry();
     
@@ -144,7 +145,6 @@ ArrayList<SnapEntry> loadSnapEntries(JSONArray _snapshots){
             JSONObject ansRm = ans.getJSONObject(0);
             // println("ansRm: "+ansRm);
             String rm = ansRm.getString("text");
-            // println("rm: "+rm);
             s.room = rm;
             if(!roomList.hasValue(rm)) roomList.append(rm);
           }
@@ -155,6 +155,7 @@ ArrayList<SnapEntry> loadSnapEntries(JSONArray _snapshots){
   }
   return _snapList;
 }
+
 
 void renderTimeline(StringList rms){
   // next step is to pick a room and make a chart showing when 
@@ -174,15 +175,15 @@ void renderTimeline(StringList rms){
   // put hour indicators along the scale
   for (int i = 0; i < 25; i+=3) {
     float xpos = map(i, 0, 24, chart_X1+chart_W*pow(PHI,4), chart_X2);
-    if(i==24) xpos = chart_X2-textWidth("24");
+    String tStr = i + ":00"; // tStr stands for time string
+    if(i==24) xpos = chart_X2-textWidth(tStr); // last hour of the day mark (24) should be moved a bit left to keep it within the chart borders
     fill(255,175);
     textFont(rowLabelF);
-    text(i, xpos, chart_Y1);    
+    text(tStr, xpos, chart_Y1);    
   }
 
-  int cntr=0;
+  int cntr=0; // counter here is useful because the for loop is not increment based
   for (String rm : rms) {
-
     chart_Y1 = (PLOT_Y1 + (PLOT_H * pow(PHI, 4))) + textAscent() + 5 + (chart_H * cntr);
     chart_Y2 = chart_Y1 + chart_H - 15;
 
@@ -205,24 +206,23 @@ void renderTimeline(StringList rms){
 
       secOfDay = (hours*60*60) + (minutes*60) + seconds;
 
+      // use the 'second of the day' value to set the horizontal position
       float seXPos = map(secOfDay, 0, (24*60*60), chart_X1+chart_W*pow(PHI,4), chart_X2);
+
+      // render a line to show the entry along the timeline
       stroke(76,76,255,120);
       strokeWeight(5);
       line(seXPos, chart_Y1, seXPos, chart_Y2);
-      stroke(0);
-      // line(chart_X1+chart_W*pow(PHI,4), chart_Y1,chart_X1+chart_W*pow(PHI,4), chart_Y2);
-      noFill();
-      // rectMode(CORNERS);
-      // rect(chart_X1+chart_W*pow(PHI,4),chart_Y1, chart_X2, chart_Y2);
     }
 
+    // Render row label 
     fill(255,200);
     textFont(rowLabelF);
-    // textSize(18);
     text(r, chart_X1, chart_Y2);
 
-    if (cntr < rms.size()-1) {
-      stroke(255, 18);
+    // Render a faint horizontal line under the chart to help readability
+    if (cntr < rms.size() - 1) { // the -1 is so that we don't draw a line across the bottom
+      stroke(255, 29);
       strokeWeight(.5);
       line(chart_X1, chart_Y2 + chart_H*.25, chart_X2, chart_Y2 + chart_H*.25);
      } 
