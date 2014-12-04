@@ -3,6 +3,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.text.ParseException;
+import java.util.Map;
+
 
 //Declare Globals
 int rSn; // randomSeed number. put into var so can be saved in file name. defaults to 47
@@ -22,6 +24,7 @@ float PLOT_X1, PLOT_X2, PLOT_Y1, PLOT_Y2, PLOT_W, PLOT_H;
 //Declare Globals
 JSONObject raj; // This is the variable that we load the JSON file into. It's not much use to us after that.
 ArrayList<SnapEntry> snapList;
+HashMap<String, ArrayList<SnapEntry>> roomSnapsHash;
 StringList roomList;
 String q = "Which room are you in?";
 
@@ -65,6 +68,9 @@ void setup() {
   JSONArray snapshots = raj.getJSONArray("snapshots"); // This is the variable that holds all the 'snapshots' recorded by Reporter App. 
   snapList = loadSnapEntries(snapshots); // The loadSnapEntries() function will take the snapshots JSONArray and create an ArrayList of SnapEntries
 
+  roomSnapsHash = new HashMap<String,ArrayList<SnapEntry>>();
+  roomSnapsHash = loadRoomSnapsHash(roomList);
+  
   StringList rooms = new StringList();
   rooms.append("Main room");
   rooms.append("Bedroom");
@@ -90,6 +96,14 @@ void setup() {
   println("margin: " + margin);
   println("snapList size = " + snapList.size());
   // println("roomList = " + roomList);
+  // print name and count for each room
+  for (String rm : roomList) {
+    if(roomSnapsHash.containsKey(rm)){
+      ArrayList rmList = (ArrayList)roomSnapsHash.get(rm);
+      int roomCount = rmList.size();
+      println(rm + " : " + roomCount);
+    }
+  }
   println("setup done: " + nf(millis() / 1000.0, 1, 2));
   noLoop();
 }
@@ -151,9 +165,25 @@ ArrayList<SnapEntry> loadSnapEntries(JSONArray _snapshots){
         }
       }
     }
+
     if(s.room != null) _snapList.add(s);
   }
   return _snapList;
+}
+
+HashMap<String, ArrayList<SnapEntry>> loadRoomSnapsHash(StringList _rmL){
+  HashMap<String, ArrayList<SnapEntry>> rmSnpsHash = new HashMap<String,ArrayList<SnapEntry>>(); // create a hashmap object to be returned
+                                                                                                 // naming similar things differently is hard...   
+  for (String currRoom : _rmL) { // for each room name (string) in the roomList StringList object...
+    ArrayList<SnapEntry> snaps = new ArrayList<SnapEntry>(); // create an ArrayList to hold any snapshots where the snap's room string matches the current room string
+    for (SnapEntry currSnap : snapList) { // for each snapshot in the SnapList ArrayList
+      if(currSnap.room != null){ // is there a value in the current snap's room variable
+        if(currSnap.room.equals(currRoom)) snaps.add(currSnap);
+      }
+    }
+    rmSnpsHash.put(currRoom, snaps);
+  }
+  return (HashMap)rmSnpsHash;
 }
 
 
@@ -164,15 +194,15 @@ void renderTimeline(StringList rms){
   // room |_______________________________| 
   float chart_X1, chart_X2, chart_Y1, chart_Y2, chart_W, chart_H;
   textFont(rowLabelF);
-  chart_X1 = PLOT_X1;
-  chart_X2 = PLOT_X2;
-  chart_W = chart_X2 - chart_X1;
-  chart_H = ((PLOT_H - (PLOT_H * pow(PHI, 4))) - textAscent() *2 ) / (rms.size()); // textAscent included to account for top scale #s
-  // chart_Y1 = PLOT_Y1;
-  chart_Y1 = (PLOT_Y1 + (PLOT_H * pow(PHI, 4)));
-  chart_Y2 = PLOT_Y1 + chart_H;
+  chart_X1  = PLOT_X1;
+  chart_X2  = PLOT_X2;
+  chart_W   = chart_X2 - chart_X1;
+  chart_H   = ((PLOT_H - (PLOT_H * pow(PHI, 4))) - textAscent() * 2) / (rms.size()); // textAscent included to account for top scale #s
+  chart_Y1  = (PLOT_Y1 + (PLOT_H * pow(PHI, 4)));
+  chart_Y2  = PLOT_Y1 + chart_H;
 
   // put hour indicators along the scale
+  // This time scale code should be moved outside of this function
   for (int i = 0; i < 25; i+=3) {
     float xpos = map(i, 0, 24, chart_X1+chart_W*pow(PHI,4), chart_X2);
     String tStr = i + ":00"; // tStr stands for time string
@@ -182,9 +212,10 @@ void renderTimeline(StringList rms){
     text(tStr, xpos, chart_Y1);    
   }
 
-  int cntr=0; // counter here is useful because the for loop is not increment based
-  for (String rm : rms) {
-    chart_Y1 = (PLOT_Y1 + (PLOT_H * pow(PHI, 4))) + textAscent() + 5 + (chart_H * cntr);
+  for (int i = 0; i < rms.size(); i+=1) {
+    String rm = rms.get(i);
+
+    chart_Y1 = (PLOT_Y1 + (PLOT_H * pow(PHI, 4))) + textAscent() + 5 + (chart_H * i);
     chart_Y2 = chart_Y1 + chart_H - 15;
 
     String r = rm;
@@ -221,14 +252,12 @@ void renderTimeline(StringList rms){
     text(r, chart_X1, chart_Y2);
 
     // Render a faint horizontal line under the chart to help readability
-    if (cntr < rms.size() - 1) { // the -1 is so that we don't draw a line across the bottom
+    if (i < rms.size() - 1) { // the -1 is so that we don't draw a line across the bottom
       stroke(255, 29);
       strokeWeight(.5);
-      line(chart_X1, chart_Y2 + chart_H*.25, chart_X2, chart_Y2 + chart_H*.25);
+      line(chart_X1, chart_Y2 + chart_H*.25, chart_X2, chart_Y2 + chart_H*.25); // the *0.25 seems kind of hacky. Should be a better way of doing this
      } 
-    cntr += 1;
   }
-
 }
 
 
