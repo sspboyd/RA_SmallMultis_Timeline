@@ -16,6 +16,8 @@ class SnapEntry {
 
   int born;
 
+  color clr = color(200,123,123,247);
+
   
   PVector pos = new PVector();
   PVector targetPos = new PVector();
@@ -35,11 +37,13 @@ class SnapEntry {
   void render() {
     pushMatrix();
     translate(pos.x, pos.y);
-    fill(col, 255);
-    if((mouseX > pos.x) && (mouseX < pos.x + textWidth(room)) && (mouseY > pos.y - 20) && (mouseY < pos.y)){
-      fill(255);
-    }
-    text(room, 0, 0);
+      //fill(col, 255);
+      stroke(clr);
+      if((mouseX > pos.x) && (mouseX < pos.x + textWidth(room)) && (mouseY > pos.y - 20) && (mouseY < pos.y)){
+        stroke(255);
+      }
+      strokeWeight(5);
+      line(0, 0, 0, 7);
     popMatrix();
   }
 
@@ -55,7 +59,5 @@ class SnapEntry {
     }
     dts = parsedDate;
   }
-
-
 
 }

@@ -105,7 +105,7 @@ void setup() {
     }
   }
   println("setup done: " + nf(millis() / 1000.0, 1, 2));
-  noLoop();
+  // noLoop();
 }
 
 
@@ -201,36 +201,21 @@ void renderTimeline(StringList rms){
   chart_Y1  = (PLOT_Y1 + (PLOT_H * pow(PHI, 4)));
   chart_Y2  = PLOT_Y1 + chart_H;
 
-  // put hour indicators along the scale
-  // This time scale code should be moved outside of this function
-  for (int i = 0; i < 25; i+=3) {
-    float xpos = map(i, 0, 24, chart_X1+chart_W*pow(PHI,4), chart_X2);
-    String tStr = i + ":00"; // tStr stands for time string
-    if(i==24) xpos = chart_X2-textWidth(tStr); // last hour of the day mark (24) should be moved a bit left to keep it within the chart borders
-    fill(255,175);
-    textFont(rowLabelF);
-    text(tStr, xpos, chart_Y1);    
-  }
-
   for (int i = 0; i < rms.size(); i+=1) {
     String rm = rms.get(i);
 
     chart_Y1 = (PLOT_Y1 + (PLOT_H * pow(PHI, 4))) + textAscent() + 5 + (chart_H * i);
     chart_Y2 = chart_Y1 + chart_H - 15;
 
-    String r = rm;
     // create an ArrayList of SnapEntries 
     ArrayList<SnapEntry> rmList = new ArrayList();
-    for (SnapEntry se : snapList) {
-      if(se.room.equals(r)) rmList.add(se);
-    }
-    // println("rmList.size(): "+rmList.size());
+    rmList = (ArrayList)roomSnapsHash.get(rm);
 
-    for (SnapEntry se : rmList) {
+    for (SnapEntry currSnapEntry : rmList) {
       // get the second of the day for this entry
       int secOfDay = 0;
       Calendar calendar = Calendar.getInstance();
-      calendar.setTime(se.dts);
+      calendar.setTime(currSnapEntry.dts);
       int hours = calendar.get(Calendar.HOUR_OF_DAY);
       int minutes = calendar.get(Calendar.MINUTE);
       int seconds = calendar.get(Calendar.SECOND);
@@ -239,6 +224,11 @@ void renderTimeline(StringList rms){
 
       // use the 'second of the day' value to set the horizontal position
       float seXPos = map(secOfDay, 0, (24*60*60), chart_X1+chart_W*pow(PHI,4), chart_X2);
+      float seYPos = chart_Y1;
+      if(currSnapEntry.targetPos == null) currSnapEntry.targetPos.set(seXPos, seYPos);
+      currSnapEntry.update();
+      currSnapEntry.render();
+
 
       // render a line to show the entry along the timeline
       stroke(76,76,255,120);
@@ -249,7 +239,7 @@ void renderTimeline(StringList rms){
     // Render row label 
     fill(255,200);
     textFont(rowLabelF);
-    text(r, chart_X1, chart_Y2);
+    text(rm, chart_X1, chart_Y2);
 
     // Render a faint horizontal line under the chart to help readability
     if (i < rms.size() - 1) { // the -1 is so that we don't draw a line across the bottom
@@ -257,6 +247,17 @@ void renderTimeline(StringList rms){
       strokeWeight(.5);
       line(chart_X1, chart_Y2 + chart_H*.25, chart_X2, chart_Y2 + chart_H*.25); // the *0.25 seems kind of hacky. Should be a better way of doing this
      } 
+  }
+
+  // put hour indicators along the scale
+  // This time scale code should be moved outside of this function
+  for (int i = 0; i < 25; i+=3) {
+    float xpos = map(i, 0, 24, chart_X1+chart_W*pow(PHI,4), chart_X2);
+    String tStr = i + ":00"; // tStr stands for time string
+    if(i==24) xpos = chart_X2-textWidth(tStr); // last hour of the day mark (24) should be moved a bit left to keep it within the chart borders
+    fill(255,175);
+    textFont(rowLabelF);
+    text(tStr, xpos, chart_Y1);    
   }
 }
 
