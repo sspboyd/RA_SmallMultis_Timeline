@@ -18,15 +18,17 @@ boolean PDFOUT = false;
 
 // Declare Positioning Variables
 float margin;
-float PLOT_X1, PLOT_X2, PLOT_Y1, PLOT_Y2, PLOT_W, PLOT_H;
+float PLOT_X1, PLOT_X2, PLOT_Y1, PLOT_Y2, PLOT_W, PLOT_H; // Defining the drawable area of the canvas (inside the margin)
+float CHART_AREA_X1, CHART_AREA_X2, CHART_AREA_Y1, CHART_AREA_Y2, CHART_AREA_W, CHART_AREA_H; // Defining the area of the canvas that all the (small multiple) charts will be drawn
 
 //Declare Globals
 JSONObject raj; // This is the variable that we load the JSON file into. It's not much use to us after that.
 ArrayList<SnapEntry> snapList;
 HashMap<String, ArrayList<SnapEntry>> roomSnapsHash;
+HashMap<String, ArrayList<SnapEntry>> doWSnapsHash;
 StringList roomList; // list of ALL rooms
 StringList rooms; // list of rooms to be graphed
-StringList dayList; // list of ALL days
+String[] DAYS_OF_WEEK = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 StringList _days; // list of days to be graphed
 String q = "Which room are you in?";
 
@@ -42,12 +44,19 @@ void setup() {
 
   margin = width * pow(PHI, 6);
 
-  PLOT_X1 = margin;
-  PLOT_X2 = width-margin;
-  PLOT_Y1 = margin;
-  PLOT_Y2 = height-margin;
-  PLOT_W = PLOT_X2 - PLOT_X1;
-  PLOT_H = PLOT_Y2 - PLOT_Y1;
+  PLOT_X1       = margin;
+  PLOT_X2       = width - margin;
+  PLOT_Y1       = margin;
+  PLOT_Y2       = height - margin;
+  PLOT_W        = PLOT_X2 - PLOT_X1;
+  PLOT_H        = PLOT_Y2 - PLOT_Y1;
+
+  CHART_AREA_X1 = PLOT_X1;
+  CHART_AREA_X2 = PLOT_X2;
+  CHART_AREA_Y1 = (PLOT_Y1 + (PLOT_H * pow(PHI, 4)));
+  CHART_AREA_Y2 = PLOT_Y2;
+  CHART_AREA_W  = CHART_AREA_X2 - CHART_AREA_X1;
+  CHART_AREA_H  = CHART_AREA_Y2 - CHART_AREA_Y1;
 
   smooth(4);
 
@@ -64,7 +73,7 @@ void setup() {
 
   roomSnapsHash = new HashMap<String,ArrayList<SnapEntry>>();
   roomSnapsHash = loadRoomSnapsHash(roomList);
-  
+
   rooms = new StringList();
   rooms.append("Main room");
   rooms.append("Bedroom");
@@ -81,17 +90,8 @@ void setup() {
   rooms.append("Dining room");
   rooms.append("Screened in porch");
   rooms.append("The dock");
-/**/
 
-  dayList = new StringList();
-  dayList.append("Monday");
-  dayList.append("Tuesday");
-  dayList.append("Wednesday");
-  dayList.append("Thursday");
-  dayList.append("Friday");
-  dayList.append("Saturday");
-  dayList.append("Sunday");
-
+  
   _days = new StringList();
   _days.append("Monday");
   _days.append("Tuesday");
@@ -131,22 +131,22 @@ void draw() {
   background(29);
 
   renderTitle();
-  renderTimelineScale();
-  // renderTimeDayGrid(snapList);
-  renderRoomsTimeline(rooms);
+  renderTimelineScale(); // horizontal scale (0-24hrs)
+  renderTimeDayGrid(snapList);
+  // renderRoomsTimeline(rooms);
   // renderDaysOfWeekLabels();
 
   fill(255,18);
   textFont(rowLabelF);
-  text("sspboyd", PLOT_X2-textWidth("sspboyd"), PLOT_Y2);
+  text("sspboyd", PLOT_X2 - textWidth("sspboyd"), PLOT_Y2);
 }
 
 
 
-// Creates HashMap of "Room name" to ArrayList of Snapshot Entries
+// Creates HashMap of "Room name" <--> ArrayList of Snapshot Entries
 HashMap<String, ArrayList<SnapEntry>> loadRoomSnapsHash(StringList _rmL){
   HashMap<String, ArrayList<SnapEntry>> rmSnpsHash = new HashMap<String,ArrayList<SnapEntry>>(); // create a hashmap object to be returned
-                                                                                                 // naming similar things differently is hard...   
+                                                                                                 // naming similar things differently is hard...
   for (String currRoom : _rmL) { // for each room name (string) in the roomList StringList object...
     ArrayList<SnapEntry> snaps = new ArrayList<SnapEntry>(); // create an ArrayList to hold any snapshots where the snap's room string matches the current room string
     for (SnapEntry currSnap : snapList) { // for each snapshot in the SnapList ArrayList
@@ -159,23 +159,33 @@ HashMap<String, ArrayList<SnapEntry>> loadRoomSnapsHash(StringList _rmL){
   return (HashMap)rmSnpsHash;
 }
 
+// Creates HashMap of "Day of Week (Monday)" <--> ArrayList of Snapshot Entries
+HashMap<String, ArrayList<SnapEntry>> loadDoWSnapsHash(StringList _d){
+  HashMap<String, ArrayList<SnapEntry>> doWSnpsHash = new HashMap<String,ArrayList<SnapEntry>>(); // create a hashmap object to be returned
+                                                                                                 // naming similar things differently is hard...
+  for (String currDay : _d) { // for each room name (string) in the roomList StringList object...
+    ArrayList<SnapEntry> snaps = new ArrayList<SnapEntry>(); // create an ArrayList to hold any snapshots where the snap's room string matches the current room string
+    for (SnapEntry currSnap : snapList) { // for each snapshot in the SnapList ArrayList
+      if(currSnap.dts != null){ // is there a value in the current snap's room variable
+        String dayStr = DAYS_OF_WEEK[getDayOfWeekIndx(currSnap.dts) - 1];
+        if(dayStr.equals(currDay)) snaps.add(currSnap);
+      }
+    }
+    doWSnpsHash.put(currDay, snaps);
+  }
+  return (HashMap)doWSnpsHash;
+}
+
 // Render the horizontal Scale
 void renderTimelineScale(){
-  float chart_X1, chart_X2, chart_Y1, chart_Y2, chart_W, chart_H;
-  chart_X1  = PLOT_X1;
-  chart_X2  = PLOT_X2;
-  chart_W   = chart_X2 - chart_X1;
-  chart_Y1  = (PLOT_Y1 + (PLOT_H * pow(PHI, 4)));
-
   // put hour indicators along the scale
-  // This time scale code should be moved outside of this function
   for (int i = 0; i < 25; i+=3) {
-    float xpos = map(i, 0, 24, chart_X1+chart_W*pow(PHI,4), chart_X2);
+    float xpos = map(i, 0, 24, CHART_AREA_X1 + CHART_AREA_W * pow(PHI,4), CHART_AREA_X2);
     String tStr = i + ":00"; // tStr stands for time string
-    if(i==24) xpos = chart_X2-textWidth(tStr); // last hour of the day mark (24) should be moved a bit left to keep it within the chart borders
+    if(i==24) xpos = CHART_AREA_X2 - textWidth(tStr); // last hour of the day mark (24) should be moved a bit left to keep it within the chart borders
     fill(255,175);
     textFont(rowLabelF);
-    text(tStr, xpos, chart_Y1);    
+    text(tStr, xpos, CHART_AREA_Y1);    
   }
 }
 
@@ -186,19 +196,18 @@ void renderRoomsTimeline(StringList rms){
   // create some chart dimensions
   // room |_______________________________| 
   float chart_X1, chart_X2, chart_Y1, chart_Y2, chart_W, chart_H;
-  chart_X1  = PLOT_X1;
-  chart_X2  = PLOT_X2;
-  chart_W   = chart_X2 - chart_X1;
+  chart_X1  = CHART_AREA_X1;
+  chart_X2  = CHART_AREA_X2;
+  chart_W   = CHART_AREA_W;
   textFont(rowLabelF); // this is needed to for the next line with textAscent
-  chart_H   = ((PLOT_H - (PLOT_H * pow(PHI, 4))) - textAscent() * 2) / (rms.size()); // textAscent included to account for top scale #s
-  chart_Y1  = (PLOT_Y1 + (PLOT_H * pow(PHI, 4)));
-  chart_Y2  = PLOT_Y1 + chart_H;
+  chart_H   = (CHART_AREA_H - textAscent()) / (rms.size()); // textAscent included to account for top scale #s
+  // chart_Y1  = CHART_AREA_Y1 + chart_H * i;
+  // chart_Y2  = chart_Y1 + chart_H;
 
   for (int i = 0; i < rms.size(); i+=1) {
     String rm = rms.get(i);
-
-    chart_Y1 = (PLOT_Y1 + (PLOT_H * pow(PHI, 4))) + textAscent() + 5 + (chart_H * i);
-    chart_Y2 = chart_Y1 + chart_H - 15;
+    chart_Y1 = (CHART_AREA_Y1 + textAscent() + 5) + (chart_H * i);
+    chart_Y2 = chart_Y1 + chart_H;
 
     // create an ArrayList of SnapEntries 
     ArrayList<SnapEntry> rmList = new ArrayList();
@@ -210,17 +219,15 @@ void renderRoomsTimeline(StringList rms){
       int dayOfWeek = getDayOfWeekIndx(currSnapEntry.dts);
 
       // use the 'second of the day' value to set the horizontal position
-      float seXPos = map(secOfDay, 0, (24*60*60), chart_X1+chart_W*pow(PHI,4), chart_X2);
+      float seXPos = map(secOfDay, 0, (24*60*60), chart_X1 + chart_W * pow(PHI, 4), chart_X2);
       float seYPos = chart_Y1;
+      currSnapEntry.setH(chart_H);
       if(currSnapEntry.targetPos.x == 0) currSnapEntry.targetPos.set(seXPos, seYPos);
       currSnapEntry.update();
       currSnapEntry.render();
 
-
       // render a line to show the entry along the timeline
-      stroke(76,76,255,120);
-      strokeWeight(5);
-      line(seXPos, chart_Y1, seXPos, chart_Y2);
+      // line(seXPos, chart_Y1, seXPos, chart_Y2);
     }
 
     // Render row label 
@@ -245,9 +252,9 @@ void renderDaysOfWeekLabels(){
   // float chart_Y1  = (PLOT_Y1 + (PLOT_H * pow(PHI, 4))) + textAscent();
 
   float chart_Y2  = PLOT_Y1 + chart_H;
-for (int i = 0; i < _days.size(); i++) {
-  text(_days.get(i), PLOT_X1, chart_Y1+(chart_H*i) + 47);
-}
+  for (int i = 0; i < _days.size(); i++) {
+    text(_days.get(i), PLOT_X1, chart_Y1+(chart_H*i) + 47);
+  }
 }
 
 void renderTimeDayGrid(ArrayList<SnapEntry> sl){
@@ -268,6 +275,7 @@ void renderTimeDayGrid(ArrayList<SnapEntry> sl){
     float csey = map(getDayOfWeekIndx(currSnapEntry.dts), 1,7, chart_Y1, chart_Y2);
     currSnapEntry.targetPos.set(csex, csey);
     currSnapEntry.pos.set(csex, csey);
+    currSnapEntry.setH(47);
     currSnapEntry.render();
   }
 }
@@ -295,8 +303,3 @@ int getDayOfWeekIndx(Date d){
   c.setTime(d);
   return c.get(Calendar.DAY_OF_WEEK);
 }
-
-
-
-
-
