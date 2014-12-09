@@ -1,4 +1,3 @@
-import processing.pdf.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -39,13 +38,7 @@ String q = "Which room are you in?";
 
 void setup() {
   background(29);
-  if (PDFOUT) {
-    size(800, 450, PDF, generateSaveImgFileName(".pdf"));
-  }
-  else {
-    // size(1300, 650);
-    size(1300, 650);
-  }
+  size(1300, 650);
 
   margin = width * pow(PHI, 6);
 
@@ -56,8 +49,6 @@ void setup() {
   PLOT_W = PLOT_X2 - PLOT_X1;
   PLOT_H = PLOT_Y2 - PLOT_Y1;
 
-  rSn = 47; // 29, 18;
-  randomSeed(rSn);
   smooth(4);
 
   mainTitleF  = loadFont("HelveticaNeue-14.vlw");  //requires a font file in the data folder?
@@ -65,10 +56,10 @@ void setup() {
   mainTitleF  = loadFont("HelveticaNeue-Light-36.vlw");  //requires a font file in the data folder?
 
   raj = loadJSONObject("reporter-export-20141129.json"); // this file has to be in your /data directory. I've included a small sample file.
-  // raj = loadJSONObject("reporter-export-20140903.json"); // this file has to be in your /data directory. I've included a small sample file.
+  JSONArray snapshots = raj.getJSONArray("snapshots"); // This is the variable that holds all the 'snapshots' recorded by Reporter App. 
   
   roomList = new StringList();
-  JSONArray snapshots = raj.getJSONArray("snapshots"); // This is the variable that holds all the 'snapshots' recorded by Reporter App. 
+
   snapList = loadSnapEntries(snapshots); // The loadSnapEntries() function will take the snapshots JSONArray and create an ArrayList of SnapEntries
 
   roomSnapsHash = new HashMap<String,ArrayList<SnapEntry>>();
@@ -111,12 +102,13 @@ void setup() {
   _days.append("Sunday");
 
 
-
   // Debug / Status info
+  println("===================================");
   println("margin: " + margin);
-  println("snapList size = " + snapList.size());
+  // println("snapList size = " + snapList.size());
   // println("roomList = " + roomList);
   // print name and count for each room
+  /*
   for (String rm : roomList) {
     if(roomSnapsHash.containsKey(rm)){
       ArrayList rmList = (ArrayList)roomSnapsHash.get(rm);
@@ -124,6 +116,7 @@ void setup() {
       println(rm + " : " + roomCount);
     }
   }
+  */
   println("setup done: " + nf(millis() / 1000.0, 1, 2));
   // noLoop();
 }
@@ -139,66 +132,18 @@ void draw() {
 
   renderTitle();
   renderTimelineScale();
-  renderTimeDayGrid(snapList);
-//  renderTimeline(rooms);
-  renderDaysOfWeekLabels();
+  // renderTimeDayGrid(snapList);
+  renderRoomsTimeline(rooms);
+  // renderDaysOfWeekLabels();
 
   fill(255,18);
   textFont(rowLabelF);
   text("sspboyd", PLOT_X2-textWidth("sspboyd"), PLOT_Y2);
-
-  if (PDFOUT) exit();
 }
 
 
-ArrayList<SnapEntry> loadSnapEntries(JSONArray _snapshots){
-  ArrayList<SnapEntry> _snapList = new ArrayList();
 
-  for (int i = 0; i < _snapshots.size(); i+=1) { // iterate through every snapshot in the snapshots array...
-    JSONObject snap = _snapshots.getJSONObject(i); // create a new json object (snap) with the current snapshot
-
-    // create a new SnapEntry object for this snapshot
-    SnapEntry s = new SnapEntry();
-    
-    String sdts = snap.getString("date"); // sdts = snapshot datetime string. This is an example of how to grab variables in the snap json object.
-    s.dateString = sdts;
-    s.setDts(sdts);
-
-    JSONArray resps = snap.getJSONArray("responses"); // Create a new array to grab the responses from the current snapshot
-    
-    String questionPrompt = ""; // declare and initialize this variable before it's used in the if() statement coming next.
-    
-    for (int j = 0; j < resps.size(); j+=1) {  // iterate through each response
-      JSONObject resp = resps.getJSONObject(j); // Create a new json object called resp to grab each of the responses individually
-      if (resp.hasKey("questionPrompt")) {  // test to make sure there is a question prompt associated with this response. I've found a few times that responses are missing question prompts!
-        questionPrompt = resp.getString("questionPrompt");
-        // println("resp question: " + question);
-      }
-      if (questionPrompt.equals(q) == true) { // check to see if the questionPrompt string matches the question we're looking for...
-        // One of the answer types is "answeredOptions"
-        if (resp.hasKey("answeredOptions")) {  // again, check to see if the resp JSONObject has a key called "answeredOptions"
-        }
-        if (resp.hasKey("tokens")) {  // again, check to see if the resp JSONObject has a key called "tokens"
-          JSONArray ans = resp.getJSONArray("tokens"); // create another JSONArray of the answers
-          if(ans.size() > 1) println("ans @ " + sdts + " has more than one room: \n" + ans);
-          if(ans.size() < 1) println("ans has no rooms! ->" + ans);
-          if(ans.size() > 0){
-            JSONObject ansRm = ans.getJSONObject(0);
-            // println("ansRm: "+ansRm);
-            String rm = ansRm.getString("text");
-            s.room = rm;
-            if(!roomList.hasValue(rm)) roomList.append(rm);
-          }
-        }
-      }
-    }
-
-    // if(s.room != null) _snapList.add(s);
-    _snapList.add(s);
-  }
-  return _snapList;
-}
-
+// Creates HashMap of "Room name" to ArrayList of Snapshot Entries
 HashMap<String, ArrayList<SnapEntry>> loadRoomSnapsHash(StringList _rmL){
   HashMap<String, ArrayList<SnapEntry>> rmSnpsHash = new HashMap<String,ArrayList<SnapEntry>>(); // create a hashmap object to be returned
                                                                                                  // naming similar things differently is hard...   
@@ -214,7 +159,7 @@ HashMap<String, ArrayList<SnapEntry>> loadRoomSnapsHash(StringList _rmL){
   return (HashMap)rmSnpsHash;
 }
 
-
+// Render the horizontal Scale
 void renderTimelineScale(){
   float chart_X1, chart_X2, chart_Y1, chart_Y2, chart_W, chart_H;
   chart_X1  = PLOT_X1;
@@ -235,7 +180,7 @@ void renderTimelineScale(){
 }
 
 
-void renderTimeline(StringList rms){
+void renderRoomsTimeline(StringList rms){
   // next step is to pick a room and make a chart showing when 
   // I'm in that room (0-24hrs)
   // create some chart dimensions
