@@ -1,6 +1,3 @@
-
-
-
 /*////////////////////////////////////////
  SnapEntry Objects
  ////////////////////////////////////////*/
@@ -16,9 +13,9 @@ class SnapEntry {
 
   int born;
 
-  color clr = color(76,76,123,29);
+  float h; // height
+  color clr = color(76,76,255,120);
 
-  
   PVector pos = new PVector();
   PVector targetPos = new PVector();
 
@@ -33,18 +30,17 @@ class SnapEntry {
     pos.y += (targetPos.y - pos.y) * .1;
   }
 
-
   void render() {
     pushMatrix();
     translate(pos.x, pos.y);
       //fill(col, 255);
       stroke(clr);
-      strokeWeight(5);
+      strokeWeight(3);
       if(pos.dist(new PVector(mouseX, mouseY-23)) < 20) {
-        strokeWeight(.25);
+        strokeWeight(.5);
         stroke(255);
       }
-      line(0, 0, 0, 47);
+      line(0, 0, 0, h);
     popMatrix();
   }
 
@@ -61,4 +57,7 @@ class SnapEntry {
     dts = parsedDate;
   }
 
+  void setH(float _h){
+    h = _h * pow(PHI,0);
+  }
 }
