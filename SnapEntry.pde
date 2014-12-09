@@ -39,7 +39,7 @@ class SnapEntry {
     translate(pos.x, pos.y);
       //fill(col, 255);
       stroke(clr);
-      if((mouseX > pos.x) && (mouseX < pos.x + textWidth(room)) && (mouseY > pos.y - 20) && (mouseY < pos.y)){
+      if(pos.dist(new PVector(mouseX, mouseY)) < 10) {
         stroke(255);
       }
       strokeWeight(5);
