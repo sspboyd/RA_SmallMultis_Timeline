@@ -16,7 +16,7 @@ class SnapEntry {
 
   int born;
 
-  color clr = color(200,123,123,247);
+  color clr = color(76,76,123,29);
 
   
   PVector pos = new PVector();
@@ -39,11 +39,12 @@ class SnapEntry {
     translate(pos.x, pos.y);
       //fill(col, 255);
       stroke(clr);
-      if(pos.dist(new PVector(mouseX, mouseY)) < 10) {
+      strokeWeight(5);
+      if(pos.dist(new PVector(mouseX, mouseY-23)) < 20) {
+        strokeWeight(.25);
         stroke(255);
       }
-      strokeWeight(5);
-      line(0, 0, 0, 7);
+      line(0, 0, 0, 47);
     popMatrix();
   }
 

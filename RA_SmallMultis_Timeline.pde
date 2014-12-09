@@ -25,7 +25,10 @@ float PLOT_X1, PLOT_X2, PLOT_Y1, PLOT_Y2, PLOT_W, PLOT_H;
 JSONObject raj; // This is the variable that we load the JSON file into. It's not much use to us after that.
 ArrayList<SnapEntry> snapList;
 HashMap<String, ArrayList<SnapEntry>> roomSnapsHash;
-StringList roomList;
+StringList roomList; // list of ALL rooms
+StringList rooms; // list of rooms to be graphed
+StringList dayList; // list of ALL days
+StringList _days; // list of days to be graphed
 String q = "Which room are you in?";
 
 
@@ -71,7 +74,7 @@ void setup() {
   roomSnapsHash = new HashMap<String,ArrayList<SnapEntry>>();
   roomSnapsHash = loadRoomSnapsHash(roomList);
   
-  StringList rooms = new StringList();
+  rooms = new StringList();
   rooms.append("Main room");
   rooms.append("Bedroom");
   rooms.append("My den");
@@ -89,8 +92,25 @@ void setup() {
   rooms.append("The dock");
 /**/
 
-  renderTimeline(rooms);
-  renderTitle();
+  dayList = new StringList();
+  dayList.append("Monday");
+  dayList.append("Tuesday");
+  dayList.append("Wednesday");
+  dayList.append("Thursday");
+  dayList.append("Friday");
+  dayList.append("Saturday");
+  dayList.append("Sunday");
+
+  _days = new StringList();
+  _days.append("Monday");
+  _days.append("Tuesday");
+  _days.append("Wednesday");
+  _days.append("Thursday");
+  _days.append("Friday");
+  _days.append("Saturday");
+  _days.append("Sunday");
+
+
 
   // Debug / Status info
   println("margin: " + margin);
@@ -115,7 +135,14 @@ void setup() {
  ////////////////////////////////////////*/
 
 void draw() {
-  //background(255);
+  background(29);
+
+  renderTitle();
+  renderTimelineScale();
+  renderTimeDayGrid(snapList);
+//  renderTimeline(rooms);
+  renderDaysOfWeekLabels();
+
   fill(255,18);
   textFont(rowLabelF);
   text("sspboyd", PLOT_X2-textWidth("sspboyd"), PLOT_Y2);
@@ -134,7 +161,7 @@ ArrayList<SnapEntry> loadSnapEntries(JSONArray _snapshots){
     SnapEntry s = new SnapEntry();
     
     String sdts = snap.getString("date"); // sdts = snapshot datetime string. This is an example of how to grab variables in the snap json object.
-    // s.dateString = sdts;
+    s.dateString = sdts;
     s.setDts(sdts);
 
     JSONArray resps = snap.getJSONArray("responses"); // Create a new array to grab the responses from the current snapshot
@@ -166,7 +193,8 @@ ArrayList<SnapEntry> loadSnapEntries(JSONArray _snapshots){
       }
     }
 
-    if(s.room != null) _snapList.add(s);
+    // if(s.room != null) _snapList.add(s);
+    _snapList.add(s);
   }
   return _snapList;
 }
@@ -187,16 +215,36 @@ HashMap<String, ArrayList<SnapEntry>> loadRoomSnapsHash(StringList _rmL){
 }
 
 
+void renderTimelineScale(){
+  float chart_X1, chart_X2, chart_Y1, chart_Y2, chart_W, chart_H;
+  chart_X1  = PLOT_X1;
+  chart_X2  = PLOT_X2;
+  chart_W   = chart_X2 - chart_X1;
+  chart_Y1  = (PLOT_Y1 + (PLOT_H * pow(PHI, 4)));
+
+  // put hour indicators along the scale
+  // This time scale code should be moved outside of this function
+  for (int i = 0; i < 25; i+=3) {
+    float xpos = map(i, 0, 24, chart_X1+chart_W*pow(PHI,4), chart_X2);
+    String tStr = i + ":00"; // tStr stands for time string
+    if(i==24) xpos = chart_X2-textWidth(tStr); // last hour of the day mark (24) should be moved a bit left to keep it within the chart borders
+    fill(255,175);
+    textFont(rowLabelF);
+    text(tStr, xpos, chart_Y1);    
+  }
+}
+
+
 void renderTimeline(StringList rms){
   // next step is to pick a room and make a chart showing when 
   // I'm in that room (0-24hrs)
   // create some chart dimensions
   // room |_______________________________| 
   float chart_X1, chart_X2, chart_Y1, chart_Y2, chart_W, chart_H;
-  textFont(rowLabelF);
   chart_X1  = PLOT_X1;
   chart_X2  = PLOT_X2;
   chart_W   = chart_X2 - chart_X1;
+  textFont(rowLabelF); // this is needed to for the next line with textAscent
   chart_H   = ((PLOT_H - (PLOT_H * pow(PHI, 4))) - textAscent() * 2) / (rms.size()); // textAscent included to account for top scale #s
   chart_Y1  = (PLOT_Y1 + (PLOT_H * pow(PHI, 4)));
   chart_Y2  = PLOT_Y1 + chart_H;
@@ -213,19 +261,13 @@ void renderTimeline(StringList rms){
 
     for (SnapEntry currSnapEntry : rmList) {
       // get the second of the day for this entry
-      int secOfDay = 0;
-      Calendar calendar = Calendar.getInstance();
-      calendar.setTime(currSnapEntry.dts);
-      int hours = calendar.get(Calendar.HOUR_OF_DAY);
-      int minutes = calendar.get(Calendar.MINUTE);
-      int seconds = calendar.get(Calendar.SECOND);
-
-      secOfDay = (hours*60*60) + (minutes*60) + seconds;
+      int secOfDay = getSecOfDay(currSnapEntry.dts);
+      int dayOfWeek = getDayOfWeekIndx(currSnapEntry.dts);
 
       // use the 'second of the day' value to set the horizontal position
       float seXPos = map(secOfDay, 0, (24*60*60), chart_X1+chart_W*pow(PHI,4), chart_X2);
       float seYPos = chart_Y1;
-      if(currSnapEntry.targetPos == null) currSnapEntry.targetPos.set(seXPos, seYPos);
+      if(currSnapEntry.targetPos.x == 0) currSnapEntry.targetPos.set(seXPos, seYPos);
       currSnapEntry.update();
       currSnapEntry.render();
 
@@ -248,22 +290,68 @@ void renderTimeline(StringList rms){
       line(chart_X1, chart_Y2 + chart_H*.25, chart_X2, chart_Y2 + chart_H*.25); // the *0.25 seems kind of hacky. Should be a better way of doing this
      } 
   }
-
-  // put hour indicators along the scale
-  // This time scale code should be moved outside of this function
-  for (int i = 0; i < 25; i+=3) {
-    float xpos = map(i, 0, 24, chart_X1+chart_W*pow(PHI,4), chart_X2);
-    String tStr = i + ":00"; // tStr stands for time string
-    if(i==24) xpos = chart_X2-textWidth(tStr); // last hour of the day mark (24) should be moved a bit left to keep it within the chart borders
-    fill(255,175);
-    textFont(rowLabelF);
-    text(tStr, xpos, chart_Y1);    
-  }
 }
 
+void renderDaysOfWeekLabels(){
+  textFont(rowLabelF); // this is needed to for the next line with textAscent // and shouldn't this be the font used for the horiz scale text?
+  // chart_H   = ((PLOT_H - (PLOT_H * pow(PHI, 4))) - textAscent() * 2) / (_days.size()); // textAscent included to account for top scale #s
+  float chart_H   = ((PLOT_H - (PLOT_H * pow(PHI, 4))) - textAscent() * 2) / _days.size(); // textAscent included to account for top scale #s
+  float chart_Y1  = (PLOT_Y1 + (PLOT_H * pow(PHI, 4)));
+  // float chart_Y1  = (PLOT_Y1 + (PLOT_H * pow(PHI, 4))) + textAscent();
+
+  float chart_Y2  = PLOT_Y1 + chart_H;
+for (int i = 0; i < _days.size(); i++) {
+  text(_days.get(i), PLOT_X1, chart_Y1+(chart_H*i) + 47);
+}
+}
+
+void renderTimeDayGrid(ArrayList<SnapEntry> sl){
+  float chart_X1, chart_X2, chart_Y1, chart_Y2, chart_W, chart_H;
+  chart_X1  = PLOT_X1;
+  chart_X2  = PLOT_X2;
+  chart_W   = chart_X2 - chart_X1;
+  textFont(rowLabelF); // this is needed to for the next line with textAscent // and shouldn't this be the font used for the horiz scale text?
+  // chart_H   = ((PLOT_H - (PLOT_H * pow(PHI, 4))) - textAscent() * 2) / (_days.size()); // textAscent included to account for top scale #s
+  chart_H   = ((PLOT_H - (PLOT_H * pow(PHI, 4))) - textAscent() * 2) / 1; // textAscent included to account for top scale #s
+  chart_Y1  = (PLOT_Y1 + (PLOT_H * pow(PHI, 4)));
+  // chart_Y1  = (PLOT_Y1 + (PLOT_H * pow(PHI, 4))) + textAscent();
+  chart_Y2  = PLOT_Y1 + chart_H;
+
+
+  for (SnapEntry currSnapEntry : sl) {
+    float csex = map(getSecOfDay(currSnapEntry.dts), 0, 24*60*60, chart_X1+chart_W*pow(PHI,4), chart_X2);
+    float csey = map(getDayOfWeekIndx(currSnapEntry.dts), 1,7, chart_Y1, chart_Y2);
+    currSnapEntry.targetPos.set(csex, csey);
+    currSnapEntry.pos.set(csex, csey);
+    currSnapEntry.render();
+  }
+}
 
 void renderTitle(){
   textFont(mainTitleF);
   fill(255,200);
-  text("Which room are you in?", PLOT_X1, PLOT_Y1+textAscent());
+  text("Time to Report", PLOT_X1, PLOT_Y1+textAscent()*1);
+  // text("Which room are you in?", PLOT_X1, PLOT_Y1+textAscent()*2);
 }
+
+
+int getSecOfDay(Date d){
+  Calendar c  = Calendar.getInstance();
+  c.setTime(d);
+  int hours   = c.get(Calendar.HOUR_OF_DAY);
+  int minutes = c.get(Calendar.MINUTE);
+  int seconds = c.get(Calendar.SECOND);
+
+  return (hours*60*60) + (minutes*60) + seconds;
+}
+
+int getDayOfWeekIndx(Date d){
+  Calendar c  = Calendar.getInstance();
+  c.setTime(d);
+  return c.get(Calendar.DAY_OF_WEEK);
+}
+
+
+
+
+
