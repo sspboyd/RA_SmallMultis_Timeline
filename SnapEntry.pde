@@ -35,12 +35,12 @@ class SnapEntry {
     translate(pos.x, pos.y);
       //fill(col, 255);
       stroke(clr);
-      strokeWeight(3);
+      strokeWeight(1);
       if(pos.dist(new PVector(mouseX, mouseY-23)) < 20) {
         strokeWeight(.5);
         stroke(255);
       }
-      line(0, 0, 0, h);
+      line(0, h, 0, -h);
     popMatrix();
   }
 

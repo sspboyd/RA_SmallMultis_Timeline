@@ -132,13 +132,21 @@ void draw() {
 
   renderTitle();
   renderTimelineScale(); // horizontal scale (0-24hrs)
-  renderTimeDayGrid(snapList);
-  // renderRoomsTimeline(rooms);
+  // renderTimeDayGrid(snapList);
+  renderRoomsTimeline(rooms);
   // renderDaysOfWeekLabels();
 
   fill(255,18);
   textFont(rowLabelF);
   text("sspboyd", PLOT_X2 - textWidth("sspboyd"), PLOT_Y2);
+
+    noFill();
+    strokeWeight(.5);
+  stroke(100, 255);
+  rect(PLOT_X1, PLOT_Y1, PLOT_W, PLOT_H);
+  stroke(255, 255);
+  rect(CHART_AREA_X1, CHART_AREA_Y1, CHART_AREA_W, CHART_AREA_H);
+
 }
 
 
@@ -185,7 +193,7 @@ void renderTimelineScale(){
     if(i==24) xpos = CHART_AREA_X2 - textWidth(tStr); // last hour of the day mark (24) should be moved a bit left to keep it within the chart borders
     fill(255,175);
     textFont(rowLabelF);
-    text(tStr, xpos, CHART_AREA_Y1);    
+    text(tStr, xpos, CHART_AREA_Y1+textAscent());    
   }
 }
 
@@ -200,13 +208,13 @@ void renderRoomsTimeline(StringList rms){
   chart_X2  = CHART_AREA_X2;
   chart_W   = CHART_AREA_W;
   textFont(rowLabelF); // this is needed to for the next line with textAscent
-  chart_H   = (CHART_AREA_H - textAscent()) / (rms.size()); // textAscent included to account for top scale #s
+  chart_H   = (CHART_AREA_H - textAscent()-5) / (rms.size()); // textAscent included to account for top scale #s
   // chart_Y1  = CHART_AREA_Y1 + chart_H * i;
   // chart_Y2  = chart_Y1 + chart_H;
 
   for (int i = 0; i < rms.size(); i+=1) {
     String rm = rms.get(i);
-    chart_Y1 = (CHART_AREA_Y1 + textAscent() + 5) + (chart_H * i);
+    chart_Y1 = (CHART_AREA_Y1 + textAscent()+5) + (chart_H * i);
     chart_Y2 = chart_Y1 + chart_H;
 
     // create an ArrayList of SnapEntries 
@@ -221,7 +229,7 @@ void renderRoomsTimeline(StringList rms){
       // use the 'second of the day' value to set the horizontal position
       float seXPos = map(secOfDay, 0, (24*60*60), chart_X1 + chart_W * pow(PHI, 4), chart_X2);
       float seYPos = chart_Y1;
-      currSnapEntry.setH(chart_H);
+      currSnapEntry.setH(chart_H*PHI);
       if(currSnapEntry.targetPos.x == 0) currSnapEntry.targetPos.set(seXPos, seYPos);
       currSnapEntry.update();
       currSnapEntry.render();
