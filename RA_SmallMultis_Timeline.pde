@@ -203,19 +203,28 @@ void renderRoomsTimeline(StringList rms){
   // I'm in that room (0-24hrs)
   // create some chart dimensions
   // room |_______________________________| 
+  float ch_bfr_H,totalChBfrH; // the height of the buffer between two charts, and the total buffer height
+  ch_bfr_H = CHART_AREA_H * pow(PHI,9); // salt to taste
+  totalChBfrH = ch_bfr_H * rms.size()-1; // -1 bc we only want buffer's between charts, not at the bottom
+
   float chart_X1, chart_X2, chart_Y1, chart_Y2, chart_W, chart_H;
   chart_X1  = CHART_AREA_X1;
   chart_X2  = CHART_AREA_X2;
   chart_W   = CHART_AREA_W;
   textFont(rowLabelF); // this is needed to for the next line with textAscent
-  chart_H   = (CHART_AREA_H - textAscent()-5) / (rms.size()); // textAscent included to account for top scale #s
+  chart_H   = ((CHART_AREA_H - (textAscent()-5)) - totalChBfrH) / (rms.size()); // textAscent included to account for top scale #s
   // chart_Y1  = CHART_AREA_Y1 + chart_H * i;
   // chart_Y2  = chart_Y1 + chart_H;
 
   for (int i = 0; i < rms.size(); i+=1) {
     String rm = rms.get(i);
-    chart_Y1 = (CHART_AREA_Y1 + textAscent()+5) + (chart_H * i);
+    chart_Y1 = (CHART_AREA_Y1 + (textAscent()+5)) + (chart_H * i) + (ch_bfr_H*i);
     chart_Y2 = chart_Y1 + chart_H;
+    stroke(100,100,0);
+    noFill();
+    rectMode(CORNERS);
+    rect(chart_X1, chart_Y1, chart_X2, chart_Y2);
+    rectMode(CORNER);
 
     // create an ArrayList of SnapEntries 
     ArrayList<SnapEntry> rmList = new ArrayList();
@@ -229,7 +238,7 @@ void renderRoomsTimeline(StringList rms){
       // use the 'second of the day' value to set the horizontal position
       float seXPos = map(secOfDay, 0, (24*60*60), chart_X1 + chart_W * pow(PHI, 4), chart_X2);
       float seYPos = chart_Y1;
-      currSnapEntry.setH(chart_H*PHI);
+      currSnapEntry.setH(chart_H/1);
       if(currSnapEntry.targetPos.x == 0) currSnapEntry.targetPos.set(seXPos, seYPos);
       currSnapEntry.update();
       currSnapEntry.render();

@@ -40,7 +40,7 @@ class SnapEntry {
         strokeWeight(.5);
         stroke(255);
       }
-      line(0, h, 0, -h);
+      line(0, 0, 0, h);
     popMatrix();
   }
 
