@@ -140,13 +140,13 @@ void draw() {
   textFont(rowLabelF);
   text("sspboyd", PLOT_X2 - textWidth("sspboyd"), PLOT_Y2);
 
-    noFill();
+/*    noFill();
     strokeWeight(.5);
   stroke(100, 255);
   rect(PLOT_X1, PLOT_Y1, PLOT_W, PLOT_H);
   stroke(255, 255);
   rect(CHART_AREA_X1, CHART_AREA_Y1, CHART_AREA_W, CHART_AREA_H);
-
+*/
 }
 
 
@@ -220,11 +220,12 @@ void renderRoomsTimeline(StringList rms){
     String rm = rms.get(i);
     chart_Y1 = (CHART_AREA_Y1 + (textAscent()+5)) + (chart_H * i) + (ch_bfr_H*i);
     chart_Y2 = chart_Y1 + chart_H;
-    stroke(100,100,0);
+/*    stroke(100,100,0);
     noFill();
     rectMode(CORNERS);
     rect(chart_X1, chart_Y1, chart_X2, chart_Y2);
     rectMode(CORNER);
+    */
 
     // create an ArrayList of SnapEntries 
     ArrayList<SnapEntry> rmList = new ArrayList();
@@ -256,7 +257,7 @@ void renderRoomsTimeline(StringList rms){
     if (i < rms.size() - 1) { // the -1 is so that we don't draw a line across the bottom
       stroke(255, 29);
       strokeWeight(.5);
-      line(chart_X1, chart_Y2 + chart_H*.25, chart_X2, chart_Y2 + chart_H*.25); // the *0.25 seems kind of hacky. Should be a better way of doing this
+      line(chart_X1, chart_Y2 + ch_bfr_H/2, chart_X2, chart_Y2 + ch_bfr_H/2); // the *0.25 seems kind of hacky. Should be a better way of doing this
      } 
   }
 }
