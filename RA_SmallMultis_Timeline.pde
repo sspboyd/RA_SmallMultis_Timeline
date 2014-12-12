@@ -42,8 +42,8 @@ String q = "Which room are you in?";
 
 void setup() {
   background(29);
-  // size(1300, 650);
-  size(1900, 1000);
+  size(1300, 650);
+  // size(1900, 1000); // resolution for iMac
 
   margin = width * pow(PHI, 6);
 
@@ -141,6 +141,7 @@ void draw() {
   // renderTimeDayGrid(snapList);
   renderRoomsTimeline(rooms);
   // renderDaysOfWeekLabels();
+  renderHLTime();
 
   fill(255,18);
   textFont(rowLabelF);
@@ -194,9 +195,9 @@ HashMap<String, ArrayList<SnapEntry>> loadDoWSnapsHash(StringList _d){
 // Render the horizontal Scale
 void renderTimelineScale(){
   // put hour indicators along the scale
-  for (int i = 0; i < 25; i+=3) {
+  for (int i = 0; i <= 24; i+=3) {
     float xpos = map(i, 0, 24, CHART_AREA_X1 + CHART_AREA_W * pow(PHI,4), CHART_AREA_X2);
-    String tStr = i + ":00"; // tStr stands for time string
+    String tStr = nf(i,2) + ":00"; // tStr stands for time string
     if(i==24) xpos = CHART_AREA_X2 - textWidth(tStr); // last hour of the day mark (24) should be moved a bit left to keep it within the chart borders
     fill(255,175);
     textFont(rowLabelF);
@@ -310,6 +311,15 @@ void renderTitle(){
   fill(255,200);
   text("Time to Report", PLOT_X1, PLOT_Y1+textAscent()*1);
   // text("Which room are you in?", PLOT_X1, PLOT_Y1+textAscent()*2);
+}
+
+void renderHLTime(){
+  if((mouseX>CHART_AREA_X1 + CHART_AREA_W * pow(PHI,4)) && (mouseX<CHART_AREA_X2) && (mouseY>CHART_AREA_Y1) && (mouseY < CHART_AREA_Y2)){
+    int hLMinOfDay = floor(map(mouseX, CHART_AREA_X1 + CHART_AREA_W * pow(PHI,4), CHART_AREA_X2, 0, 1439));
+    int hlHr = floor(hLMinOfDay/60);
+    int hlMin = hLMinOfDay%60;
+    text(nf(hlHr,2) + ":" + nf(hlMin, 2), mouseX+20, mouseY);
+  }
 }
 
 Table loadRmCounts(ArrayList<SnapEntry> _se){
