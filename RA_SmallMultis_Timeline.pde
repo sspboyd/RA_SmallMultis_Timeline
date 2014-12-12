@@ -24,6 +24,7 @@ float CHART_AREA_X1, CHART_AREA_X2, CHART_AREA_Y1, CHART_AREA_Y2, CHART_AREA_W, 
 //Declare Globals
 JSONObject raj; // This is the variable that we load the JSON file into. It's not much use to us after that.
 ArrayList<SnapEntry> snapList;
+ArrayList<SnapEntry> hLSnapList;
 HashMap<String, ArrayList<SnapEntry>> roomSnapsHash;
 HashMap<String, ArrayList<SnapEntry>> doWSnapsHash;
 StringList roomList; // list of ALL rooms
@@ -41,7 +42,8 @@ String q = "Which room are you in?";
 
 void setup() {
   background(29);
-  size(1300, 650);
+  // size(1300, 650);
+  size(1900, 1000);
 
   margin = width * pow(PHI, 6);
 
@@ -75,30 +77,18 @@ void setup() {
   roomSnapsHash = new HashMap<String,ArrayList<SnapEntry>>();
   roomSnapsHash = loadRoomSnapsHash(roomList);
 
-  rooms = new StringList();
-/*
+  Table roomCounts = loadRmCounts(snapList);
+  rooms = new StringList();  
+  rooms = loadRoomList(roomCounts);
+
+  /*  Keeping this here to show how to manually select rows/charts 
   rooms.append("Main room");
   rooms.append("Bedroom");
   rooms.append("My den");
   rooms.append("My office at CBC");
-  rooms.append("Outside");
-  rooms.append("The kitchen");
-  rooms.append("Patio");
-  rooms.append("9A204 CBC mtg room");
-  rooms.append("Backyard");
-  rooms.append("Lexus");
-  rooms.append("Locker room");
-  rooms.append("Heaton's office");
-  rooms.append("Dining room");
-  rooms.append("Screened in porch");
-  rooms.append("The dock");
-  rooms.append("Conference room");
-  rooms.append("Waiting room");
-  rooms.append("Hotel room");
-*/
+  rooms.append("Outside");  */
 
 
-  
   _days = new StringList();
   _days.append("Monday");
   _days.append("Tuesday");
@@ -112,8 +102,6 @@ void setup() {
   // Debug / Status info
   println("===================================");
   println("margin: " + margin);
-  Table roomCounts = loadRmCounts(snapList);
-  rooms = loadRoomList(roomCounts);
   // println("snapList size = " + snapList.size());
   // println("roomList = " + roomList);
   // print name and count for each room
@@ -140,6 +128,7 @@ void draw() {
   background(29);
 
   renderTitle();
+
   stroke(255,176);
   fill(255,11);
   strokeWeight(.25);
@@ -157,13 +146,14 @@ void draw() {
   textFont(rowLabelF);
   text("sspboyd", PLOT_X2 - textWidth("sspboyd"), PLOT_Y2);
 
-/*    noFill();
-    strokeWeight(.5);
+  /*  debugging
+  noFill();
+  strokeWeight(.5);
   stroke(100, 255);
   rect(PLOT_X1, PLOT_Y1, PLOT_W, PLOT_H);
   stroke(255, 255);
   rect(CHART_AREA_X1, CHART_AREA_Y1, CHART_AREA_W, CHART_AREA_H);
-*/
+  */
 }
 
 
@@ -257,7 +247,7 @@ void renderRoomsTimeline(StringList rms){
       float seXPos = map(secOfDay, 0, (24*60*60), chart_X1 + chart_W * pow(PHI, 4), chart_X2);
       float seYPos = chart_Y1;
       currSnapEntry.setH(chart_H/1);
-      if(currSnapEntry.targetPos.x == 0) currSnapEntry.targetPos.set(seXPos, seYPos);
+      currSnapEntry.targetPos.set(seXPos, seYPos); // need to eventually move this somewhere else. doesn't need to be updated every frame.
       currSnapEntry.update();
       currSnapEntry.render();
 
@@ -344,11 +334,7 @@ Table loadRmCounts(ArrayList<SnapEntry> _se){
       }
     }
   } 
-  t.sortReverse("Count");
-  for (TableRow tr : t.rows()) {
-    println(tr.getString("Room") + " : " + tr.getInt("Count"));
-  }
-  println(t);
+  t.sortReverse("Count"); // sort the list by most to least room "Count"
   return t;
 }
 
