@@ -27,6 +27,7 @@ ArrayList<SnapEntry> snapList;
 HashMap<String, ArrayList<SnapEntry>> roomSnapsHash;
 HashMap<String, ArrayList<SnapEntry>> doWSnapsHash;
 StringList roomList; // list of ALL rooms
+Table roomCounts; // replace the StringList var above with a Table and add info about counts (and order the table)
 StringList rooms; // list of rooms to be graphed
 String[] DAYS_OF_WEEK = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 StringList _days; // list of days to be graphed
@@ -75,6 +76,7 @@ void setup() {
   roomSnapsHash = loadRoomSnapsHash(roomList);
 
   rooms = new StringList();
+/*
   rooms.append("Main room");
   rooms.append("Bedroom");
   rooms.append("My den");
@@ -90,6 +92,11 @@ void setup() {
   rooms.append("Dining room");
   rooms.append("Screened in porch");
   rooms.append("The dock");
+  rooms.append("Conference room");
+  rooms.append("Waiting room");
+  rooms.append("Hotel room");
+*/
+
 
   
   _days = new StringList();
@@ -105,6 +112,8 @@ void setup() {
   // Debug / Status info
   println("===================================");
   println("margin: " + margin);
+  Table roomCounts = loadRmCounts(snapList);
+  rooms = loadRoomList(roomCounts);
   // println("snapList size = " + snapList.size());
   // println("roomList = " + roomList);
   // print name and count for each room
@@ -131,6 +140,14 @@ void draw() {
   background(29);
 
   renderTitle();
+  stroke(255,176);
+  fill(255,11);
+  strokeWeight(.25);
+  line(mouseX, CHART_AREA_Y1, mouseX, CHART_AREA_Y2);
+  // noFill();
+  // ellipse(mouseX, mouseY, 100, 100);
+  noStroke();
+  rect(mouseX-20, CHART_AREA_Y1, 40, CHART_AREA_H);
   renderTimelineScale(); // horizontal scale (0-24hrs)
   // renderTimeDayGrid(snapList);
   renderRoomsTimeline(rooms);
@@ -304,6 +321,48 @@ void renderTitle(){
   text("Time to Report", PLOT_X1, PLOT_Y1+textAscent()*1);
   // text("Which room are you in?", PLOT_X1, PLOT_Y1+textAscent()*2);
 }
+
+Table loadRmCounts(ArrayList<SnapEntry> _se){
+  Table t = new Table(); // is this line done?
+  t.addColumn("Room", Table.STRING);
+  t.addColumn("Count", Table.INT);
+
+  for (SnapEntry currSE : _se) {
+    String currRm = currSE.room;
+
+    if(currRm != null){
+      TableRow tr = t.findRow(currRm, "Room");
+
+      if(tr == null){ // if there is no room with this name already...
+        TableRow ntr = t.addRow(); // ntr = new table row
+        ntr.setString("Room", currRm);
+        ntr.setInt("Count", 1);
+       } else{
+        int currCnt = tr.getInt("Count");
+        tr.setInt("Count",++currCnt);
+       
+      }
+    }
+  } 
+  t.sortReverse("Count");
+  for (TableRow tr : t.rows()) {
+    println(tr.getString("Room") + " : " + tr.getInt("Count"));
+  }
+  println(t);
+  return t;
+}
+
+StringList loadRoomList(Table _t){
+  StringList rmList = new StringList();
+  for (int i = 0; i < _t.getRowCount(); i++) {
+    TableRow r = _t.getRow(i);
+    if(r.getInt("Count") > 4){ // only return rooms with more than 4 reports
+      rmList.append(r.getString("Room"));
+    }
+  }
+  return rmList;
+}
+
 
 
 int getSecOfDay(Date d){
