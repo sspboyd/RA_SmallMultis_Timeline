@@ -27,7 +27,7 @@ class SnapEntry {
 
   void update() {
     pos.x += (targetPos.x - pos.x) * .1;
-    pos.y += (targetPos.y - pos.y) * .1;
+    pos.y += (targetPos.y - pos.y) * .5;
   }
 
   void render() {
@@ -36,9 +36,9 @@ class SnapEntry {
       //fill(col, 255);
       stroke(clr);
       strokeWeight(5);
-      if(pos.dist(new PVector(mouseX, mouseY-23)) < 100) {
-        strokeWeight(.5);
-        stroke(255);
+      if(pos.dist(new PVector(mouseX, mouseY-18)) < 50) {
+        strokeWeight(1);
+        stroke(255,100);
       }
       line(0, 0, 0, h);
     popMatrix();
