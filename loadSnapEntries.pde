@@ -23,8 +23,8 @@ ArrayList<SnapEntry> loadSnapEntries(JSONArray _snapshots){
       }
       if (questionPrompt.equals(q) == true) { // check to see if the questionPrompt string matches the question we're looking for...
         // One of the answer types is "answeredOptions"
-        if (resp.hasKey("answeredOptions")) {  // again, check to see if the resp JSONObject has a key called "answeredOptions"
-        }
+        // if (resp.hasKey("answeredOptions")) {  // again, check to see if the resp JSONObject has a key called "answeredOptions"
+        // }
         if (resp.hasKey("tokens")) {  // again, check to see if the resp JSONObject has a key called "tokens"
           JSONArray ans = resp.getJSONArray("tokens"); // create another JSONArray of the answers
           if(ans.size() > 1) println("ans @ " + sdts + " has more than one room: \n" + ans);
@@ -34,7 +34,8 @@ ArrayList<SnapEntry> loadSnapEntries(JSONArray _snapshots){
             // println("ansRm: "+ansRm);
             String rm = ansRm.getString("text");
             s.room = rm;
-            if(!roomList.hasValue(rm)) roomList.append(rm);
+            if(!roomList.hasValue(rm)) roomList.append(rm); // if the room name does not already exist in the roomList, then add it
+                                                            // messy, should probably be moved outside of this function and made into its own func
           }
         }
       }

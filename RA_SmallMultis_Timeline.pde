@@ -7,15 +7,11 @@ import java.util.concurrent.TimeUnit;
 
 
 //Declare Globals
-int rSn; // randomSeed number. put into var so can be saved in file name. defaults to 47
 final float PHI = 0.618033989;
 
 // Declare Font Variables
 PFont mainTitleF;
 PFont rowLabelF;
-PFont scaleTicksF;
-
-boolean PDFOUT = false;
 
 // Declare Positioning Variables
 float margin;
@@ -24,16 +20,20 @@ float CHART_AREA_X1, CHART_AREA_X2, CHART_AREA_Y1, CHART_AREA_Y2, CHART_AREA_W, 
 
 //Declare Globals
 JSONObject raj; // This is the variable that we load the JSON file into. It's not much use to us after that.
-ArrayList<SnapEntry> snapList;
-ArrayList<SnapEntry> hLSnapList;
-HashMap<String, ArrayList<SnapEntry>> roomSnapsHash;
-HashMap<String, ArrayList<SnapEntry>> doWSnapsHash;
+ArrayList<SnapEntry> snapList; // master list of all snap entries read out of raj
+ArrayList<SnapEntry> hLSnapList; // list of highlighted snap entries (not yet implemented)
+HashMap<String, ArrayList<SnapEntry>> roomSnapsHash; // Map of row name (Room) to ArrayList of snapEntries for that room
+HashMap<String, ArrayList<SnapEntry>> doWSnapsHash; // same idea as above but for days of the week
+
 StringList roomList; // list of ALL rooms
 Table roomCounts; // replace the StringList var above with a Table and add info about counts (and order the table)
 StringList rooms; // list of rooms to be graphed
+
 String[] DAYS_OF_WEEK = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 StringList _days; // list of days to be graphed
+
 float hiLiW; // highLight width, used to determine width of area highlighted when user moves over charts
+
 String q = "Which room are you in?";
 
 
@@ -48,7 +48,8 @@ void setup() {
   background(29);
   size(1300, 650);
   // size(1900, 1000); // resolution for iMac
-
+  smooth(4);
+  
   margin = width * pow(PHI, 7);
 
   PLOT_X1       = margin;
@@ -65,26 +66,23 @@ void setup() {
   CHART_AREA_W  = CHART_AREA_X2 - CHART_AREA_X1;
   CHART_AREA_H  = CHART_AREA_Y2 - CHART_AREA_Y1;
 
-  smooth(4);
-
-  // mainTitleF  = loadFont("HelveticaNeue-14.vlw");  //requires a font file in the data folder?
   rowLabelF   = loadFont("HelveticaNeue-14.vlw");  //requires a font file in the data folder?
   mainTitleF  = loadFont("HelveticaNeue-Light-36.vlw");  //requires a font file in the data folder?
 
   raj = loadJSONObject("reporter-export-20141129.json"); // this file has to be in your /data directory. I've included a small sample file.
   JSONArray snapshots = raj.getJSONArray("snapshots"); // This is the variable that holds all the 'snapshots' recorded by Reporter App. 
   
-  roomList = new StringList();
+  roomList = new StringList(); // this var gets set in the loadSnapEntries function. instead it should be done outside in a single purpose function
 
   snapList = loadSnapEntries(snapshots); // The loadSnapEntries() function will take the snapshots JSONArray and create an ArrayList of SnapEntries
 
   roomSnapsHash = new HashMap<String,ArrayList<SnapEntry>>();
   roomSnapsHash = loadRoomSnapsHash(roomList);
 
-  Table roomCounts = loadRmCounts(snapList);
-  rooms = new StringList();  
-  rooms = loadRoomList(roomCounts);
+  Table roomCounts = loadRmCounts(snapList); // every room with its count/frequency in a sorted table
 
+  rooms = new StringList(); // list of rooms to be charted 
+  rooms = loadRoomList(roomCounts); // uses the Table to select the top n rooms. This means I don't have to do it manually like the code below did.
 
   /*  Keeping this here to show how to manually select rows/charts 
   rooms.append("Main room");
@@ -140,24 +138,12 @@ void draw() {
   background(29);
 
   renderTitle();
-
-  stroke(255,176);
-  fill(255,11);
-  strokeWeight(.25);
-  line(mouseX, CHART_AREA_Y1, mouseX, CHART_AREA_Y2);
-  // noFill();
-  // ellipse(mouseX, mouseY, 100, 100);
-  noStroke();
-  rect(mouseX-20, CHART_AREA_Y1, 40, CHART_AREA_H);
   renderTimelineScale(); // horizontal scale (0-24hrs)
   // renderTimeDayGrid(snapList);
   renderRoomsTimeline(rooms);
   // renderDaysOfWeekLabels();
-  renderHLTime();
-
-  fill(255,18);
-  textFont(rowLabelF);
-  text("sspboyd", PLOT_X2 - textWidth("sspboyd"), PLOT_Y2);
+  renderHL();
+  renderSspb();
 
   /*  debugging
   noFill();
@@ -168,9 +154,6 @@ void draw() {
   rect(CHART_AREA_X1, CHART_AREA_Y1, CHART_AREA_W, CHART_AREA_H);
   */
 }
-
-
-
 
 
 // Creates HashMap of "Room name" <--> ArrayList of Snapshot Entries
@@ -392,15 +375,30 @@ void renderTitle(){
   // text("Which room are you in?", PLOT_X1, PLOT_Y1+textAscent()*2);
 }
 
-void renderHLTime(){
+void renderHL(){
+  stroke(255,176);
+  fill(255,11);
+  strokeWeight(.25);
+  line(mouseX, CHART_AREA_Y1, mouseX, CHART_AREA_Y2);
+  // noFill();
+  // ellipse(mouseX, mouseY, 100, 100);
+  noStroke();
+  rect(mouseX-20, CHART_AREA_Y1, 40, CHART_AREA_H);
+
   if((mouseX>CHART_AREA_X1 + CHART_AREA_W * pow(PHI,4)) && (mouseX<CHART_AREA_X2) && (mouseY>CHART_AREA_Y1) && (mouseY < CHART_AREA_Y2)){
     int hLMinOfDay = floor(map(mouseX, CHART_AREA_X1 + CHART_AREA_W * pow(PHI,4), CHART_AREA_X2, 0, 1439));
     int hlHr = floor(hLMinOfDay/60);
     int hlMin = hLMinOfDay%60;
+    fill(255, 176);
     text(nf(hlHr,2) + ":" + nf(hlMin, 2), mouseX+20, mouseY);
-    stroke(255,176);
     strokeWeight(.75);
+    stroke(255,176);
     line(mouseX,mouseY,mouseX+hiLiW/2, mouseY);
   }
 }
 
+void renderSspb(){
+  fill(255,18);
+  textFont(rowLabelF);
+  text("sspboyd", PLOT_X2 - textWidth("sspboyd"), PLOT_Y2);
+}

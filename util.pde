@@ -17,9 +17,8 @@ String generateSaveImgFileName(String fileType) {
   // save functionality in here
   String outputDir = "out/";
   String sketchName = getSketchName() + "-";
-  String randomSeedNum = "rS" + rSn + "-";
   String dateTimeStamp = "" + year() + nf(month(), 2) + nf(day(), 2) + nf(hour(), 2) + nf(minute(), 2) + nf(second(), 2);
-  fileName = outputDir + sketchName + dateTimeStamp + randomSeedNum + fileType;
+  fileName = outputDir + sketchName + dateTimeStamp + fileType;
   return fileName;
 }
 
