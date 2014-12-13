@@ -3,7 +3,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.text.ParseException;
 import java.util.Map;
-import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
@@ -36,6 +35,8 @@ String[] DAYS_OF_WEEK = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
 StringList _days; // list of days to be graphed
 float hiLiW; // highLight width, used to determine width of area highlighted when user moves over charts
 String q = "Which room are you in?";
+
+
 
 
 
@@ -107,9 +108,12 @@ void setup() {
 
   // Debug / Status info
   println("===================================");
-  println("margin: " + margin);
+  // println("margin: " + margin);
   // println("snapList size = " + snapList.size());
   // println("roomList = " + roomList);
+  // println("The 'oldest' entry is " + getOldestDate(snapList));
+  // println("The 'newest' entry is " + getNewestDate(snapList));
+  
   // print name and count for each room
   /*
   for (String rm : roomList) {
@@ -120,11 +124,11 @@ void setup() {
     }
   }
   */
-  println("The 'oldest' entry is " + getOldestDate(snapList));
-  println("The 'newest' entry is " + getNewestDate(snapList));
   println("setup done: " + nf(millis() / 1000.0, 1, 2));
   // noLoop();
 }
+
+
 
 
 
@@ -167,6 +171,8 @@ void draw() {
 
 
 
+
+
 // Creates HashMap of "Room name" <--> ArrayList of Snapshot Entries
 HashMap<String, ArrayList<SnapEntry>> loadRoomSnapsHash(StringList _rmL){
   HashMap<String, ArrayList<SnapEntry>> rmSnpsHash = new HashMap<String,ArrayList<SnapEntry>>(); // create a hashmap object to be returned
@@ -200,6 +206,63 @@ HashMap<String, ArrayList<SnapEntry>> loadDoWSnapsHash(StringList _d){
   return (HashMap)doWSnpsHash;
 }
 
+ArrayList<SnapEntry> daySnapEntryList(String _d){
+  ArrayList<SnapEntry> snaps = new ArrayList<SnapEntry>(); // create an ArrayList to hold any snapshots where the snap's room string matches the current room string
+    for (SnapEntry currSnap : snapList) { // for each snapshot in the SnapList ArrayList
+      if(currSnap.dts != null){ // is there a value in the current snap's datetime stamp variable
+        String dayStr = DAYS_OF_WEEK[getDayOfWeekIndx(currSnap.dts) - 1];
+        if(dayStr.equals(_d)) snaps.add(currSnap);
+      }
+    }
+  return snaps;
+}
+
+
+Table loadRmCounts(ArrayList<SnapEntry> _se){
+  Table t = new Table(); // is this line done?
+  t.addColumn("Room", Table.STRING);
+  t.addColumn("Count", Table.INT);
+
+  for (SnapEntry currSE : _se) {
+    String currRm = currSE.room;
+
+    if(currRm != null){
+      TableRow tr = t.findRow(currRm, "Room");
+
+      if(tr == null){ // if there is no room with this name already...
+        TableRow ntr = t.addRow(); // ntr = new table row
+        ntr.setString("Room", currRm);
+        ntr.setInt("Count", 1);
+       } else{
+        int currCnt = tr.getInt("Count");
+        tr.setInt("Count",++currCnt);
+      }
+    }
+  } 
+  t.sortReverse("Count"); // sort the list by most to least room "Count"
+  return t;
+}
+
+StringList loadRoomList(Table _t){
+  StringList rmList = new StringList();
+  for (int i = 0; i < _t.getRowCount(); i++) {
+  // for (int i = 0; i < 10; i++) {
+    TableRow r = _t.getRow(i);
+    if(r.getInt("Count") > 5){ // only return rooms with more than n reports
+      rmList.append(r.getString("Room"));
+    }
+  }
+  return rmList;
+}
+
+
+
+
+
+/*////////////////////////////////////////
+ Render Functions 
+ ////////////////////////////////////////*/
+
 // Render the horizontal Scale
 void renderTimelineScale(){
   // put hour indicators along the scale
@@ -211,18 +274,6 @@ void renderTimelineScale(){
     textFont(rowLabelF);
     text(tStr, xpos, CHART_AREA_Y1+textAscent());    
   }
-}
-
-
-ArrayList<SnapEntry> daySnapEntryList(String _d){
-  ArrayList<SnapEntry> snaps = new ArrayList<SnapEntry>(); // create an ArrayList to hold any snapshots where the snap's room string matches the current room string
-    for (SnapEntry currSnap : snapList) { // for each snapshot in the SnapList ArrayList
-      if(currSnap.dts != null){ // is there a value in the current snap's datetime stamp variable
-        String dayStr = DAYS_OF_WEEK[getDayOfWeekIndx(currSnap.dts) - 1];
-        if(dayStr.equals(_d)) snaps.add(currSnap);
-      }
-    }
-  return snaps;
 }
 
 
@@ -333,10 +384,10 @@ void renderTitle(){
   fill(255,200);
   text("Time to Report", PLOT_X1, txtY1);
   textFont(rowLabelF);
-  SimpleDateFormat tdf = new SimpleDateFormat("MMMMM, yyyy");
+  SimpleDateFormat tdf = new SimpleDateFormat("MMMMM yyyy");
   String dateCpy = "From " + tdf.format(getOldestDate(snapList));
   dateCpy += " to " + tdf.format(getNewestDate(snapList)) + ". ";
-  // dateCpy += (int)daysBtwn(getOldestDate(snapList), getNewestDate(snapList)) + " days.";
+  // dateCpy += daysBtwn(getOldestDate(snapList), getNewestDate(snapList)) + " days.";
   text(dateCpy, PLOT_X1, txtY2);
   // text("Which room are you in?", PLOT_X1, PLOT_Y1+textAscent()*2);
 }
@@ -353,85 +404,3 @@ void renderHLTime(){
   }
 }
 
-Table loadRmCounts(ArrayList<SnapEntry> _se){
-  Table t = new Table(); // is this line done?
-  t.addColumn("Room", Table.STRING);
-  t.addColumn("Count", Table.INT);
-
-  for (SnapEntry currSE : _se) {
-    String currRm = currSE.room;
-
-    if(currRm != null){
-      TableRow tr = t.findRow(currRm, "Room");
-
-      if(tr == null){ // if there is no room with this name already...
-        TableRow ntr = t.addRow(); // ntr = new table row
-        ntr.setString("Room", currRm);
-        ntr.setInt("Count", 1);
-       } else{
-        int currCnt = tr.getInt("Count");
-        tr.setInt("Count",++currCnt);
-      }
-    }
-  } 
-  t.sortReverse("Count"); // sort the list by most to least room "Count"
-  return t;
-}
-
-StringList loadRoomList(Table _t){
-  StringList rmList = new StringList();
-  for (int i = 0; i < _t.getRowCount(); i++) {
-  // for (int i = 0; i < 10; i++) {
-    TableRow r = _t.getRow(i);
-    if(r.getInt("Count") > 5){ // only return rooms with more than n reports
-      rmList.append(r.getString("Room"));
-    }
-  }
-  return rmList;
-}
-
-
-
-/*////////////////////////////////////////
- Date related functions.
- Jodatime would simplify a lot of these date functions but I'm trying to stick with 
- 'out-of-the-box' Processing code to make it easier for other people to download and use this program.
- ////////////////////////////////////////*/
-
-int getSecOfDay(Date d){
-  Calendar c  = Calendar.getInstance();
-  c.setTime(d);
-  int hours   = c.get(Calendar.HOUR_OF_DAY);
-  int minutes = c.get(Calendar.MINUTE);
-  int seconds = c.get(Calendar.SECOND);
-
-  return (hours*60*60) + (minutes*60) + seconds;
-}
-
-int getDayOfWeekIndx(Date d){
-  Calendar c  = Calendar.getInstance();
-  c.setTime(d);
-  return c.get(Calendar.DAY_OF_WEEK);
-}
-
-Date getOldestDate(ArrayList<SnapEntry> _se){
-  Date oldest = new Date();
-  for (SnapEntry currSE : _se) {
-    if(currSE.dts.before(oldest)) oldest = currSE.dts;
-  }
-  return oldest;
-}
-
-Date getNewestDate(ArrayList<SnapEntry> _se){
-  Date newest = new Date(Long.MIN_VALUE);
-  for (SnapEntry currSE : _se) {
-    if(currSE.dts.after(newest)) newest = currSE.dts;
-  }
-  return newest;
-}
-
-// This is function isn't 100% reliable since it doesn't account for Daylight Savings or Leap years.
-float daysBtwn(Date _o, Date _n){ 
-  return TimeUnit.MILLISECONDS.toDays(_n.getTime() - _o.getTime());
-  // println("!!! Amount of days : " + String.valueOf(days));
-}
