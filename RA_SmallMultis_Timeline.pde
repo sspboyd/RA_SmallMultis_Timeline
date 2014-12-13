@@ -85,11 +85,6 @@ void setup() {
   rooms = loadRoomList(roomCounts);
 
 
-  Map<String, ArrayList<SnapEntry>> chartsData = new LinkedHashMap<String, ArrayList<SnapEntry>>();
-
-  chartsData.put("Monday", daySnapEntryList("Monday") );
-
-
   /*  Keeping this here to show how to manually select rows/charts 
   rooms.append("Main room");
   rooms.append("Bedroom");
@@ -228,85 +223,6 @@ ArrayList<SnapEntry> daySnapEntryList(String _d){
       }
     }
   return snaps;
-}
-
-
-
-// LinkedHashMap chartsData = new LinkedHashMap();
-// The idea here is/was to use a LinkedHashMap as a way of sending chart
-// data to a function that will render the small multiples charts in as
-// generic a way as possible. I was originally thinking that a LinkedHashMap
-// would give me a data structure that contained the row label String, 
-// associated with an ArrayList of SnapEntrys in a defined order. Problem
-// is though that LinkedHashMaps don't give you an index for each entry
-// (hence the linked part?). Without the index I still need to include or 
-// get an indexable List (a la StringList) so why not just send a StringList
-// and a Hashmap both to the chart function and avoid LinkedHashMap entirely?
-
-void renderCharts(LinkedHashMap<String, ArrayList<SnapEntry>> _cd){ 
-  // trying to reimplement the main chart rendering function in a more generic way...
-  int rCnt = _cd.size(); // row count
-  float ch_bfr_H, totalChBfrH; // the height of the buffer between two charts, and the total buffer height
-  ch_bfr_H    = CHART_AREA_H * pow(PHI,9); // salt to taste
-  totalChBfrH = ch_bfr_H * rCnt-1; // -1 bc we only want buffer's between charts, not at the bottom
-
-  float chart_X1, chart_X2, chart_Y1, chart_Y2, chart_W, chart_H;
-  chart_X1  = CHART_AREA_X1;
-  chart_X2  = CHART_AREA_X2;
-  chart_W   = CHART_AREA_W;
-  textFont(rowLabelF); // this is needed to for the next line with textAscent
-  chart_H   = ((CHART_AREA_H - (textAscent()-5)) - totalChBfrH) / rCnt; // textAscent included to account for top scale #s
-  // chart_Y1  = CHART_AREA_Y1 + chart_H * i;
-  // chart_Y2  = chart_Y1 + chart_H;
-Set s = _cd.entrySet();
-// for (Map.Entry<String,ArrayList<SnapEntry>> c : _cd.entrySet()) {
-for (String k : _cd.keySet()) {
-     
-}
-  for (int i = 0; i < rCnt; i+=1) { // now go through each row and make the chart
-    chart_Y1 = (CHART_AREA_Y1 + (textAscent()+5)) + (chart_H*i) + (ch_bfr_H*i);
-    chart_Y2 = chart_Y1 + chart_H;
-    //  stroke(100,100,0);
-    //noFill();
-    //rectMode(CORNERS);
-    //rect(chart_X1, chart_Y1, chart_X2, chart_Y2);
-    // rectMode(CORNER);
-    
-
-    // create an ArrayList of SnapEntries 
-    String rLabel = _cd.getKey(i);
-    ArrayList<SnapEntry> seList = new ArrayList();
-    seList = (ArrayList)roomSnapsHash.get(rLabel);
-
-    for (SnapEntry currSnapEntry : seList) {
-      // get the second of the day for this entry
-      int secOfDay = getSecOfDay(currSnapEntry.dts);
-      int dayOfWeek = getDayOfWeekIndx(currSnapEntry.dts);
-
-      // use the 'second of the day' value to set the horizontal position
-      float seXPos = map(secOfDay, 0, (24*60*60), chart_X1 + chart_W * pow(PHI, 4), chart_X2);
-      float seYPos = chart_Y1;
-      currSnapEntry.setH(chart_H/1);
-      currSnapEntry.targetPos.set(seXPos, seYPos); // need to eventually move this somewhere else. doesn't need to be updated every frame.
-      currSnapEntry.update();
-      currSnapEntry.render();
-
-      // render a line to show the entry along the timeline
-      // line(seXPos, chart_Y1, seXPos, chart_Y2);
-    }
-
-    // Render row label 
-    fill(255,200);
-    textFont(rowLabelF);
-    text(rm, chart_X1, chart_Y2);
-
-    // Render a faint horizontal line under the chart to help readability
-    if (i < rms.size() - 1) { // the -1 is so that we don't draw a line across the bottom
-      stroke(255, 29);
-      strokeWeight(.5);
-      line(chart_X1, chart_Y2 + ch_bfr_H/2, chart_X2, chart_Y2 + ch_bfr_H/2); // the *0.25 seems kind of hacky. Should be a better way of doing this
-     } 
-  }
 }
 
 
