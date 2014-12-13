@@ -32,6 +32,7 @@ Table roomCounts; // replace the StringList var above with a Table and add info 
 StringList rooms; // list of rooms to be graphed
 String[] DAYS_OF_WEEK = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 StringList _days; // list of days to be graphed
+float hiLiW; // highLight width, used to determine width of area highlighted when user moves over charts
 String q = "Which room are you in?";
 
 
@@ -97,6 +98,8 @@ void setup() {
   _days.append("Friday");
   _days.append("Saturday");
   _days.append("Sunday");
+
+  hiLiW = CHART_AREA_W * pow(PHI,7); // aiming for something around 40px when 650 canvas width
 
 
   // Debug / Status info
@@ -351,8 +354,9 @@ Table loadRmCounts(ArrayList<SnapEntry> _se){
 StringList loadRoomList(Table _t){
   StringList rmList = new StringList();
   for (int i = 0; i < _t.getRowCount(); i++) {
+  // for (int i = 0; i < 10; i++) {
     TableRow r = _t.getRow(i);
-    if(r.getInt("Count") > 4){ // only return rooms with more than 4 reports
+    if(r.getInt("Count") > 3){ // only return rooms with more than n reports
       rmList.append(r.getString("Room"));
     }
   }

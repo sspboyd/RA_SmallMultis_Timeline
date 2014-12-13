@@ -15,6 +15,7 @@ class SnapEntry {
 
   float h; // height
   color clr = color(76,76,255,120);
+  color hiLiClr = color(255,255,255,100);
 
   PVector pos = new PVector();
   PVector targetPos = new PVector();
@@ -28,20 +29,29 @@ class SnapEntry {
   void update() {
     pos.x += (targetPos.x - pos.x) * .1;
     pos.y += (targetPos.y - pos.y) * .5;
+
+    stroke(clr);
+    strokeWeight(5);
+    if(hiLiCheck()){
+        strokeWeight(1);
+        stroke(hiLiClr);      
+    }
   }
 
   void render() {
     pushMatrix();
     translate(pos.x, pos.y);
-      //fill(col, 255);
-      stroke(clr);
-      strokeWeight(5);
-      if(pos.dist(new PVector(mouseX, mouseY-18)) < 50) {
-        strokeWeight(1);
-        stroke(255,100);
-      }
-      line(0, 0, 0, h);
+    line(0, 0, 0, h);
     popMatrix();
+  }
+
+  boolean hiLiCheck(){
+    boolean check = false;
+    // if(pos.dist(new PVector(mouseX, mouseY-18)) < 50) {
+    if(pos.x > mouseX-(hiLiW/2) && pos.x < mouseX+(hiLiW/2)) {
+      check = true;
+    }
+    return check;
   }
 
   void setDts(String sdts){
