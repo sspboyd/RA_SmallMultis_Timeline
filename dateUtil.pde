@@ -6,7 +6,7 @@
  'out-of-the-box' Processing code to make it easier for other people to download and use this program.
  ////////////////////////////////////////*/
 
-int getSecOfDay(Date d){
+int getSecOfDay(Date d) {
   Calendar c  = Calendar.getInstance();
   c.setTime(d);
   int hours   = c.get(Calendar.HOUR_OF_DAY);
@@ -16,30 +16,31 @@ int getSecOfDay(Date d){
   return (hours*60*60) + (minutes*60) + seconds;
 }
 
-int getDayOfWeekIndx(Date d){
+int getDayOfWeekIndx(Date d) {
   Calendar c  = Calendar.getInstance();
   c.setTime(d);
   return c.get(Calendar.DAY_OF_WEEK);
 }
 
-Date getOldestDate(ArrayList<SnapEntry> _se){
+Date getOldestDate(ArrayList<SnapEntry> _se) {
   Date oldest = new Date();
   for (SnapEntry currSE : _se) {
-    if(currSE.dts.before(oldest)) oldest = currSE.dts;
+    if (currSE.dts.before(oldest)) oldest = currSE.dts;
   }
   return oldest;
 }
 
-Date getNewestDate(ArrayList<SnapEntry> _se){
+Date getNewestDate(ArrayList<SnapEntry> _se) {
   Date newest = new Date(Long.MIN_VALUE);
   for (SnapEntry currSE : _se) {
-    if(currSE.dts.after(newest)) newest = currSE.dts;
+    if (currSE.dts.after(newest)) newest = currSE.dts;
   }
   return newest;
 }
 
 // This is function isn't 100% reliable since it doesn't account for Daylight Savings or Leap years.
-int daysBtwn(Date _o, Date _n){ 
+int daysBtwn(Date _o, Date _n) { 
   return (int)TimeUnit.MILLISECONDS.toDays(_n.getTime() - _o.getTime());
   // println("!!! Amount of days : " + String.valueOf(days));
 }
+

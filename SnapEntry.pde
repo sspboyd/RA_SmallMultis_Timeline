@@ -14,15 +14,15 @@ class SnapEntry {
   int born;
 
   float h; // height
-  color clr = color(76,76,255,120);
-  color hiLiClr = color(255,255,255,100);
+  color clr = color(76, 76, 255, 120);
+  color hiLiClr = color(255, 255, 255, 100);
 
   PVector pos = new PVector();
   PVector targetPos = new PVector();
 
   color col = 255;
 
-  SnapEntry(){
+  SnapEntry() {
     whoAreYouWith = new StringList();
   }
 
@@ -32,9 +32,9 @@ class SnapEntry {
 
     stroke(clr);
     strokeWeight(5);
-    if(hiLiCheck()){
-        strokeWeight(1);
-        stroke(hiLiClr);      
+    if (hiLiCheck()) {
+      strokeWeight(1);
+      stroke(hiLiClr);
     }
   }
 
@@ -45,16 +45,16 @@ class SnapEntry {
     popMatrix();
   }
 
-  boolean hiLiCheck(){
+  boolean hiLiCheck() {
     boolean check = false;
     // if(pos.dist(new PVector(mouseX, mouseY-18)) < 50) {
-    if(pos.x > mouseX-(hiLiW/2) && pos.x < mouseX+(hiLiW/2)) {
+    if (pos.x > mouseX-(hiLiW/2) && pos.x < mouseX+(hiLiW/2)) {
       check = true;
     }
     return check;
   }
 
-  void setDts(String sdts){
+  void setDts(String sdts) {
     // 2014-05-25T12:02:06-0400
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
     Date parsedDate = new Date();
@@ -67,7 +67,8 @@ class SnapEntry {
     dts = parsedDate;
   }
 
-  void setH(float _h){
-    h = _h * pow(PHI,0);
+  void setH(float _h) {
+    h = _h * pow(PHI, 0);
   }
 }
+
