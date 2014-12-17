@@ -33,6 +33,8 @@ StringList _days; // list of days to be graphed
 float hiLiW; // (hi)gh(Li)ght (W)idth, used to determine width of area highlighted when user moves over charts
 
 String q = "Which room are you in?";
+String chartDT; // chartDT = chart Data Type eg. days, room, person, location, doing
+StringList chartRL; // chartRL = Chart Row List; 
 
 
 
@@ -93,8 +95,10 @@ void setup() {
   _days.append("Saturday");
   _days.append("Sunday");
 
-//   smcSnapList = loadSMCSnapList(_days, "days");
-  smcSnapList = loadSMCSnapList(rooms, "room");
+  chartRL = rooms;
+  chartDT = "room";
+
+  smcSnapList = loadSMCSnapList(chartRL, chartDT);
 
   hiLiW = CHART_AREA_W * pow(PHI, 7); // aiming for something around 40px when 650 canvas width
 
@@ -120,8 +124,8 @@ void draw() {
   background(29);
   renderTitle();
   renderTimelineScale(); // horizontal scale (0-24hrs)
-  renderSMCTimeline(rooms, smcSnapList);
-  // renderSMCTimeline(_days, smcSnapList);
+  // renderSMCTimeline(rooms, smcSnapList);
+  renderSMCTimeline(chartRL, smcSnapList);
   renderHL();
   renderSspb();
 }
@@ -239,16 +243,22 @@ void renderSMCTimeline(StringList _rLabels, ArrayList<SnapEntry> _se) {
   // chart_Y1  = CHART_AREA_Y1 + chart_H * i;
   // chart_Y2  = chart_Y1 + chart_H;
 
-
   for (int i = 0; i < _rLabels.size (); i+=1) {
     String rL = _rLabels.get(i); // rL = row label
     chart_Y1 = (CHART_AREA_Y1 + (textAscent()+5)) + (chart_H * i) + (ch_bfr_H*i);
     chart_Y2 = chart_Y1 + chart_H;
-
     for (SnapEntry currSnapEntry : _se) {
-      String dayStr = DAYS_OF_WEEK[getDayOfWeekIndx(currSnapEntry.dts) - 1];
-      if(currSnapEntry.room.equals(rL)){
-      // if(dayStr.equals(rL)){
+      boolean chartMatch = false; // var to test if the currSnapEntry 'matches' and should be rendered on this chart
+      if(chartDT.equals("days")){ 
+        String dayStr = DAYS_OF_WEEK[getDayOfWeekIndx(currSnapEntry.dts) - 1];      
+        if(dayStr.equals(rL)){
+          chartMatch = true;
+        }
+      }
+      if(chartDT.equals("room")){
+        if(currSnapEntry.room.equals(rL)) chartMatch = true;
+      }
+      if(chartMatch){
         // get the second of the day for this entry
         int secOfDay = getSecOfDay(currSnapEntry.dts);
         int dayOfWeek = getDayOfWeekIndx(currSnapEntry.dts);
