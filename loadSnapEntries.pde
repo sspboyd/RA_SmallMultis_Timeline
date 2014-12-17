@@ -1,4 +1,9 @@
-ArrayList<SnapEntry> loadSnapEntries(JSONArray _snapshots) {
+ArrayList<SnapEntry> loadSnapEntries(String _dataFile) {
+  JSONObject raj; // This is the variable that we load the JSON file into. It's not much use to us after that.
+  raj = loadJSONObject(_dataFile); // this file has to be in your /data directory. I've included a small sample file.
+  JSONArray _snapshots = raj.getJSONArray("snapshots"); // This is the variable that holds all the 'snapshots' recorded by Reporter App. 
+
+
   ArrayList<SnapEntry> _snapList = new ArrayList();
 
   for (int i = 0; i < _snapshots.size (); i+=1) { // iterate through every snapshot in the snapshots array...
