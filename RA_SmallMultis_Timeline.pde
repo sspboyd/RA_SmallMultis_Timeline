@@ -19,7 +19,6 @@ float PLOT_X1, PLOT_X2, PLOT_Y1, PLOT_Y2, PLOT_W, PLOT_H; // Defining the drawab
 float CHART_AREA_X1, CHART_AREA_X2, CHART_AREA_Y1, CHART_AREA_Y2, CHART_AREA_W, CHART_AREA_H; // Defining the area of the canvas that all the (small multiple) charts will be drawn
 
 //Declare Globals
-JSONObject raj; // This is the variable that we load the JSON file into. It's not much use to us after that.
 ArrayList<SnapEntry> snapList; // master list of all snap entries read out of raj
 ArrayList<SnapEntry> smcSnapList; // smc = small multiples chart. List of all snap entries to be used in the charts to be rendered
 ArrayList<SnapEntry> hLSnapList; // list of highlighted snap entries (not yet implemented)
@@ -31,7 +30,7 @@ StringList rooms; // list of rooms to be graphed
 String[] DAYS_OF_WEEK = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 StringList _days; // list of days to be graphed
 
-float hiLiW; // highLight width, used to determine width of area highlighted when user moves over charts
+float hiLiW; // (hi)gh(Li)ght (W)idth, used to determine width of area highlighted when user moves over charts
 
 String q = "Which room are you in?";
 
@@ -68,12 +67,9 @@ void setup() {
   rowLabelF   = loadFont("HelveticaNeue-14.vlw");  //requires a font file in the data folder?
   mainTitleF  = loadFont("HelveticaNeue-Light-36.vlw");  //requires a font file in the data folder?
 
-  raj = loadJSONObject("reporter-export-20141129.json"); // this file has to be in your /data directory. I've included a small sample file.
-  JSONArray snapshots = raj.getJSONArray("snapshots"); // This is the variable that holds all the 'snapshots' recorded by Reporter App. 
-
   roomList = new StringList(); // this var gets set in the loadSnapEntries function. instead it should be done outside in a single purpose function
 
-  snapList = loadSnapEntries(snapshots); // The loadSnapEntries() function will take the snapshots JSONArray and create an ArrayList of SnapEntries
+  snapList = loadSnapEntries("reporter-export-20141129.json"); // The loadSnapEntries() function will take the snapshots JSONArray and create an ArrayList of SnapEntries
 
   Table roomCounts = loadRmCounts(snapList); // every room with its count/frequency in a sorted table
 
@@ -100,7 +96,6 @@ void setup() {
 //   smcSnapList = loadSMCSnapList(_days, "days");
   smcSnapList = loadSMCSnapList(rooms, "room");
 
-
   hiLiW = CHART_AREA_W * pow(PHI, 7); // aiming for something around 40px when 650 canvas width
 
 
@@ -123,14 +118,10 @@ void setup() {
 
 void draw() {
   background(29);
-
   renderTitle();
   renderTimelineScale(); // horizontal scale (0-24hrs)
-  // renderTimeDayGrid(snapList);
-  // renderRoomsTimeline(rooms);
   renderSMCTimeline(rooms, smcSnapList);
   // renderSMCTimeline(_days, smcSnapList);
-  // renderDaysOfWeekLabels();
   renderHL();
   renderSspb();
 }
@@ -138,6 +129,9 @@ void draw() {
 
 
 
+/*////////////////////////////////////////
+ Data Logic and Data Structure Functions 
+ ////////////////////////////////////////*/
 
 // Create ArrayList of all Snap Entry to be plotted (eg. every snapEntry matching one of the rooms in a list.)
 ArrayList<SnapEntry> loadSMCSnapList(StringList _rLabels, String _dt){ // _rLabels = row labels, _dt = data type (eg room, location, person)
@@ -171,52 +165,6 @@ ArrayList<SnapEntry> loadSMCSnapList(StringList _rLabels, String _dt){ // _rLabe
 }
 
 
-
-// Creates HashMap of "Room name" <--> ArrayList of Snapshot Entries
-HashMap<String, ArrayList<SnapEntry>> loadRoomSnapsHash(StringList _rmL) {
-  HashMap<String, ArrayList<SnapEntry>> rmSnpsHash = new HashMap<String, ArrayList<SnapEntry>>(); // create a hashmap object to be returned
-  // naming similar things differently is hard...
-  for (String currRoom : _rmL) { // for each room name (string) in the roomList StringList object...
-    ArrayList<SnapEntry> snaps = new ArrayList<SnapEntry>(); // create an ArrayList to hold any snapshots where the snap's room string matches the current room string
-    for (SnapEntry currSnap : snapList) { // for each snapshot in the SnapList ArrayList
-      if (currSnap.room != null) { // is there a value in the current snap's room variable
-        if (currSnap.room.equals(currRoom)) snaps.add(currSnap);
-      }
-    }
-    rmSnpsHash.put(currRoom, snaps);
-  }
-  return (HashMap)rmSnpsHash;
-}
-
-// Creates HashMap of "Day of Week (Monday)" <--> ArrayList of Snapshot Entries
-HashMap<String, ArrayList<SnapEntry>> loadDoWSnapsHash(StringList _d) {
-  HashMap<String, ArrayList<SnapEntry>> doWSnpsHash = new HashMap<String, ArrayList<SnapEntry>>(); // create a hashmap object to be returned
-  // naming similar things differently is hard...
-  for (String currDay : _d) { // for each room name (string) in the roomList StringList object...
-    ArrayList<SnapEntry> snaps = new ArrayList<SnapEntry>(); // create an ArrayList to hold any snapshots where the snap's room string matches the current room string
-    for (SnapEntry currSnap : snapList) { // for each snapshot in the SnapList ArrayList
-      if (currSnap.dts != null) { // is there a value in the current snap's datetime stamp variable
-        String dayStr = DAYS_OF_WEEK[getDayOfWeekIndx(currSnap.dts) - 1];
-        if (dayStr.equals(currDay)) snaps.add(currSnap);
-      }
-    }
-    doWSnpsHash.put(currDay, snaps);
-  }
-  return (HashMap)doWSnpsHash;
-}
-
-ArrayList<SnapEntry> daySnapEntryList(String _d) {
-  ArrayList<SnapEntry> snaps = new ArrayList<SnapEntry>(); // create an ArrayList to hold any snapshots where the snap's room string matches the current room string
-  for (SnapEntry currSnap : snapList) { // for each snapshot in the SnapList ArrayList
-    if (currSnap.dts != null) { // is there a value in the current snap's datetime stamp variable
-      String dayStr = DAYS_OF_WEEK[getDayOfWeekIndx(currSnap.dts) - 1];
-      if (dayStr.equals(_d)) snaps.add(currSnap);
-    }
-  }
-  return snaps;
-}
-
-
 Table loadRmCounts(ArrayList<SnapEntry> _se) {
   Table t = new Table(); // is this line done?
   t.addColumn("Room", Table.STRING);
@@ -241,6 +189,7 @@ Table loadRmCounts(ArrayList<SnapEntry> _se) {
   t.sortReverse("Count"); // sort the list by most to least room "Count"
   return t;
 }
+
 
 StringList loadRoomList(Table _t) {
   StringList rmList = new StringList();
@@ -337,12 +286,15 @@ void renderTitle() {
   text("Time to Report", PLOT_X1, txtY1);
   textFont(rowLabelF);
   SimpleDateFormat tdf = new SimpleDateFormat("MMMMM yyyy");
-  String dateCpy = "From " + tdf.format(getOldestDate(snapList));
-  dateCpy += " to " + tdf.format(getNewestDate(snapList)) + ". ";
-  // dateCpy += daysBtwn(getOldestDate(snapList), getNewestDate(snapList)) + " days.";
+  String dateCpy = "From " + tdf.format(getOldestDate(smcSnapList));
+  dateCpy += " to " + tdf.format(getNewestDate(smcSnapList)) + ". ";
+  dateCpy += daysBtwn(getOldestDate(smcSnapList), getNewestDate(smcSnapList)) + " days. ";
+  dateCpy += smcSnapList.size() + " reports. ";
+
   text(dateCpy, PLOT_X1, txtY2);
   // text("Which room are you in?", PLOT_X1, PLOT_Y1+textAscent()*2);
 }
+
 
 void renderHL() {
   stroke(255, 176);
@@ -366,9 +318,9 @@ void renderHL() {
   }
 }
 
+
 void renderSspb() {
   fill(255, 18);
   textFont(rowLabelF);
   text("sspboyd", PLOT_X2 - textWidth("sspboyd"), PLOT_Y2);
 }
-
