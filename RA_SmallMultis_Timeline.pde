@@ -23,8 +23,6 @@ ArrayList<SnapEntry> snapList; // master list of all snap entries read out of ra
 ArrayList<SnapEntry> smcSnapList; // smc = small multiples chart. List of all snap entries to be used in the charts to be rendered
 ArrayList<SnapEntry> hLSnapList; // list of highlighted snap entries (not yet implemented)
 
-StringList roomList; // list of ALL rooms
-Table roomCounts; // replace the StringList var above with a Table and add info about counts (and order the table)
 StringList rooms; // list of rooms to be graphed
 
 String[] DAYS_OF_WEEK = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
@@ -34,8 +32,8 @@ float hiLiW; // (hi)gh(Li)ght (W)idth, used to determine width of area highlight
 
 String q = "Which room are you in?";
 
-String chartDT = "room"; // chartDT = chart Data Type eg. days, room, person, location, doing
-// String chartDT = "days"; // chartDT = chart Data Type eg. days, room, person, location, doing
+// String chartDT = "room"; // chartDT = chart Data Type eg. days, room, person, location, doing
+String chartDT = "days"; // chartDT = chart Data Type eg. days, room, person, location, doing
 StringList chartRL; // chartRL = Chart Row List; 
 
 
@@ -71,15 +69,12 @@ void setup() {
   rowLabelF   = loadFont("HelveticaNeue-14.vlw");  //requires a font file in the data folder?
   mainTitleF  = loadFont("HelveticaNeue-Light-36.vlw");  //requires a font file in the data folder?
 
-  roomList = new StringList(); // this var gets set in the loadSnapEntries function. instead it should be done outside in a single purpose function
-
   snapList = loadSnapEntries("reporter-export-20141129.json"); // The loadSnapEntries() function will take the snapshots JSONArray and create an ArrayList of SnapEntries
 
-  // Table roomCounts = loadRmCounts(snapList); // every room with its count/frequency in a sorted table
-  Table roomCounts = loadChartDTCounts(snapList); // every room with its count/frequency in a sorted table
+  Table chartCounts = loadChartDTCounts(snapList); // every room with its count/frequency in a sorted table
 
   rooms = new StringList(); // list of rooms to be charted 
-  rooms = loadRoomList(roomCounts); // uses the Table to select the top n rooms. This means I don't have to do it manually like the code below did.
+  rooms = loadRoomList(chartCounts); // uses the Table to select the top n rooms. This means I don't have to do it manually like the code below did.
 
   /*  Keeping this here to show how to manually select rows/charts */
    // rooms.append("Main room");
@@ -98,8 +93,8 @@ void setup() {
   _days.append("Saturday");
   _days.append("Sunday");
 
-  chartRL = rooms;
-  // chartRL = _days;
+  // chartRL = rooms;
+  chartRL = _days;
 
   smcSnapList = loadSMCSnapList(chartRL, chartDT);
 
@@ -108,8 +103,8 @@ void setup() {
 
   // Debug / Status info
   println("===================================");
-  // println("margin: " + margin);
-  // println("snapList size = " + snapList.size());
+  println("margin: " + margin);
+  println("snapList size = " + snapList.size());
 
   println("setup done: " + nf(millis() / 1000.0, 1, 2) + "s");
   // noLoop();
@@ -171,31 +166,6 @@ ArrayList<SnapEntry> loadSMCSnapList(StringList _rLabels, String _dt){ // _rLabe
   return newSMCSnapList;
 }
 
-
-Table loadRmCounts(ArrayList<SnapEntry> _se) {
-  Table t = new Table(); // is this line done?
-  t.addColumn("Room", Table.STRING);
-  t.addColumn("Count", Table.INT);
-
-  for (SnapEntry currSE : _se) {
-    String currRm = currSE.room;
-
-    if (currRm != null) {
-      TableRow tr = t.findRow(currRm, "Room");
-
-      if (tr == null) { // if there is no room with this name already...
-        TableRow ntr = t.addRow(); // ntr = new table row
-        ntr.setString("Room", currRm);
-        ntr.setInt("Count", 1);
-      } else {
-        int currCnt = tr.getInt("Count");
-        tr.setInt("Count", ++currCnt);
-      }
-    }
-  } 
-  t.sortReverse("Count"); // sort the list by most to least room "Count"
-  return t;
-}
 
 Table loadChartDTCounts(ArrayList<SnapEntry> _se) {
   Table t = new Table(); // is this line done?

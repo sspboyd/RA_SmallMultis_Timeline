@@ -39,8 +39,6 @@ ArrayList<SnapEntry> loadSnapEntries(String _dataFile) {
             // println("ansRm: "+ansRm);
             String rm = ansRm.getString("text");
             s.room = rm;
-            if (!roomList.hasValue(rm)) roomList.append(rm); // if the room name does not already exist in the roomList, then add it
-                                                             // messy, should probably be moved outside of this function and made into its own func
           }
         }
       }
