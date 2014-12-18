@@ -70,5 +70,21 @@ class SnapEntry {
   void setH(float _h) {
     h = _h * pow(PHI, 0);
   }
-}
 
+  String getRoom(){
+    return room;
+  }
+
+  String getDoW(){
+    String dow = DAYS_OF_WEEK[getDayOfWeekIndx(dts) - 1];
+    return dow;
+  }
+
+  String getData(String _dt){
+    // println("_dt: "+_dt);
+    String currDT="";
+    if(_dt.equals("room")) currDT = getRoom();
+    if(_dt.equals("days")) currDT = getDoW();
+    return currDT;
+  }
+}
