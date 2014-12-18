@@ -33,7 +33,9 @@ StringList _days; // list of days to be graphed
 float hiLiW; // (hi)gh(Li)ght (W)idth, used to determine width of area highlighted when user moves over charts
 
 String q = "Which room are you in?";
-String chartDT; // chartDT = chart Data Type eg. days, room, person, location, doing
+
+String chartDT = "room"; // chartDT = chart Data Type eg. days, room, person, location, doing
+// String chartDT = "days"; // chartDT = chart Data Type eg. days, room, person, location, doing
 StringList chartRL; // chartRL = Chart Row List; 
 
 
@@ -73,7 +75,8 @@ void setup() {
 
   snapList = loadSnapEntries("reporter-export-20141129.json"); // The loadSnapEntries() function will take the snapshots JSONArray and create an ArrayList of SnapEntries
 
-  Table roomCounts = loadRmCounts(snapList); // every room with its count/frequency in a sorted table
+  // Table roomCounts = loadRmCounts(snapList); // every room with its count/frequency in a sorted table
+  Table roomCounts = loadChartDTCounts(snapList); // every room with its count/frequency in a sorted table
 
   rooms = new StringList(); // list of rooms to be charted 
   rooms = loadRoomList(roomCounts); // uses the Table to select the top n rooms. This means I don't have to do it manually like the code below did.
@@ -96,7 +99,7 @@ void setup() {
   _days.append("Sunday");
 
   chartRL = rooms;
-  chartDT = "room";
+  // chartRL = _days;
 
   smcSnapList = loadSMCSnapList(chartRL, chartDT);
 
@@ -155,7 +158,7 @@ ArrayList<SnapEntry> loadSMCSnapList(StringList _rLabels, String _dt){ // _rLabe
 
   }else if (_dt.equals("days")) {
     for (SnapEntry currSnap : snapList) {
-      String currDay = DAYS_OF_WEEK[getDayOfWeekIndx(currSnap.dts) - 1];
+      String currDay = DAYS_OF_WEEK[getDayOfWeekIndx(currSnap.dts) - 1]; // replace with currSnap.getDoW();?
       if(currDay != null){
         for (String rl : _rLabels) {
           if(currDay.equals(rl)){
@@ -194,6 +197,32 @@ Table loadRmCounts(ArrayList<SnapEntry> _se) {
   return t;
 }
 
+Table loadChartDTCounts(ArrayList<SnapEntry> _se) {
+  Table t = new Table(); // is this line done?
+  t.addColumn(chartDT, Table.STRING);
+  t.addColumn("Count", Table.INT);
+
+  for (SnapEntry currSE : _se) {
+
+    String currSED = currSE.getData(chartDT); // currSED = chartSED is chart SnapEntry Data
+    // String currSED = currSE.chartDT; // currSED = chartSED is chart SnapEntry Data
+
+    if (currSED != null) {
+      TableRow tr = t.findRow(currSED, chartDT);
+
+      if (tr == null) { // if there is no room with this name already...
+        TableRow ntr = t.addRow(); // ntr = new table row
+        ntr.setString(chartDT, currSED);
+        ntr.setInt("Count", 1);
+      } else {
+        int currCnt = tr.getInt("Count");
+        tr.setInt("Count", ++currCnt);
+      }
+    }
+  } 
+  t.sortReverse("Count"); // sort the list by most to least room "Count"
+  return t;
+}
 
 StringList loadRoomList(Table _t) {
   StringList rmList = new StringList();
@@ -201,7 +230,7 @@ StringList loadRoomList(Table _t) {
     // for (int i = 0; i < 10; i++) {
     TableRow r = _t.getRow(i);
     if (r.getInt("Count") > 5) { // only return rooms with more than n reports
-      rmList.append(r.getString("Room"));
+      rmList.append(r.getString(chartDT));
     }
   }
   return rmList;
@@ -232,7 +261,7 @@ void renderTimelineScale() {
 void renderSMCTimeline(StringList _rLabels, ArrayList<SnapEntry> _se) {
   float ch_bfr_H, totalChBfrH; // the height of the buffer between two charts, and the total buffer height
   ch_bfr_H = CHART_AREA_H * pow(PHI, 9); // salt to taste
-  totalChBfrH = ch_bfr_H * _rLabels.size()-1; // -1 bc we only want buffer's between charts, not at the bottom
+  totalChBfrH = ch_bfr_H * (_rLabels.size()-1); // -1 bc we only want buffer's between charts, not at the bottom
 
   float chart_X1, chart_X2, chart_Y1, chart_Y2, chart_W, chart_H;
   chart_X1  = CHART_AREA_X1;
