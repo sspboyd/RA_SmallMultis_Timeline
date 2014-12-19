@@ -152,7 +152,7 @@ ArrayList<SnapEntry> loadSMCSnapList(StringList _rLabels, String _dt){ // _rLabe
 
   }else if (_dt.equals("days")) {
     for (SnapEntry currSnap : snapList) {
-      String currDay = DAYS_OF_WEEK[getDayOfWeekIndx(currSnap.dts) - 1]; // replace with currSnap.getDoW();?
+      String currDay = currSnap.getDoW();
       if(currDay != null){
         for (String rl : _rLabels) {
           if(currDay.equals(rl)){
@@ -250,7 +250,7 @@ void renderSMCTimeline(StringList _rLabels, ArrayList<SnapEntry> _se) {
     for (SnapEntry currSnapEntry : _se) {
       boolean chartMatch = false; // var to test if the currSnapEntry 'matches' and should be rendered on this chart
       if(chartDT.equals("days")){ 
-        String dayStr = DAYS_OF_WEEK[getDayOfWeekIndx(currSnapEntry.dts) - 1];  // switch to using the method in the snap entry object    
+        String dayStr = currSnapEntry.getDoW();
         if(dayStr.equals(rL)){
           chartMatch = true;
         }
