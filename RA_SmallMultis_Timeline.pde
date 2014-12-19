@@ -17,6 +17,7 @@ PFont rowLabelF;
 float margin;
 float PLOT_X1, PLOT_X2, PLOT_Y1, PLOT_Y2, PLOT_W, PLOT_H; // Defining the drawable area of the canvas (inside the margin)
 float CHART_AREA_X1, CHART_AREA_X2, CHART_AREA_Y1, CHART_AREA_Y2, CHART_AREA_W, CHART_AREA_H; // Defining the area of the canvas that all the (small multiple) charts will be drawn
+float hiLiW; // (hi)gh(Li)ght (W)idth, used to determine width of area highlighted when user moves over charts
 
 //Declare Globals
 ArrayList<SnapEntry> snapList; // master list of all snap entries read out of raj
@@ -26,14 +27,12 @@ ArrayList<SnapEntry> hLSnapList; // list of highlighted snap entries (not yet im
 StringList rooms; // list of rooms to be graphed
 
 String[] DAYS_OF_WEEK = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
-StringList _days; // list of days to be graphed
-
-float hiLiW; // (hi)gh(Li)ght (W)idth, used to determine width of area highlighted when user moves over charts
+StringList dayList; // list of days to be graphed
 
 String q = "Which room are you in?";
 
-// String chartDT = "room"; // chartDT = chart Data Type eg. days, room, person, location, doing
-String chartDT = "days"; // chartDT = chart Data Type eg. days, room, person, location, doing
+String chartDT = "room"; // chartDT = chart Data Type eg. days, room, person, location, doing
+// String chartDT = "days"; // chartDT = chart Data Type eg. days, room, person, location, doing
 StringList chartRL; // chartRL = Chart Row List; 
 
 
@@ -84,19 +83,19 @@ void setup() {
    //rooms.append("Outside"); 
 
 
-  _days = new StringList();
-  _days.append("Monday");
-  _days.append("Tuesday");
-  _days.append("Wednesday");
-  _days.append("Thursday");
-  _days.append("Friday");
-  _days.append("Saturday");
-  _days.append("Sunday");
+  dayList = new StringList();
+  dayList.append("Monday");
+  dayList.append("Tuesday");
+  dayList.append("Wednesday");
+  dayList.append("Thursday");
+  dayList.append("Friday");
+  dayList.append("Saturday");
+  dayList.append("Sunday");
 
-  // chartRL = rooms;
-  chartRL = _days;
+  chartRL = rooms;
+  // chartRL = dayList;
 
-  smcSnapList = loadSMCSnapList(chartRL, chartDT);
+  smcSnapList = loadSMCSnapList(chartRL, chartDT); // all snap entries that match the row string + data type
 
   hiLiW = CHART_AREA_W * pow(PHI, 7); // aiming for something around 40px when 650 canvas width
 
@@ -229,27 +228,29 @@ void renderTimelineScale() {
 
 
 void renderSMCTimeline(StringList _rLabels, ArrayList<SnapEntry> _se) {
-  float ch_bfr_H, totalChBfrH; // the height of the buffer between two charts, and the total buffer height
-  ch_bfr_H = CHART_AREA_H * pow(PHI, 9); // salt to taste
-  totalChBfrH = ch_bfr_H * (_rLabels.size()-1); // -1 bc we only want buffer's between charts, not at the bottom
-
-  float chart_X1, chart_X2, chart_Y1, chart_Y2, chart_W, chart_H;
-  chart_X1  = CHART_AREA_X1;
-  chart_X2  = CHART_AREA_X2;
-  chart_W   = CHART_AREA_W;
+  float chartBfr_H; // the height of the buffer between two charts.
+  float chart_X1, chart_X2, chart_Y1, chart_Y2, chart_W, chart_H, x_axisH;
   textFont(rowLabelF); // this is needed to for the next line with textAscent
-  chart_H   = ((CHART_AREA_H - (textAscent()-5)) - totalChBfrH) / (_rLabels.size()); // textAscent included to account for top scale #s
+  x_axisH     = textAscent() + 5;
+  chart_X1    = CHART_AREA_X1;
+  chart_X2    = CHART_AREA_X2;
+  chart_W     = CHART_AREA_W;
+  chart_H     = (CHART_AREA_H - x_axisH) / _rLabels.size(); // textAscent included to account for top scale #s
+  chartBfr_H  = chart_H * pow(PHI, 2); // salt to taste
+  chart_H     = chart_H - chartBfr_H;
   // chart_Y1  = CHART_AREA_Y1 + chart_H * i;
   // chart_Y2  = chart_Y1 + chart_H;
 
   for (int i = 0; i < _rLabels.size (); i+=1) {
     String rL = _rLabels.get(i); // rL = row label
-    chart_Y1 = (CHART_AREA_Y1 + (textAscent()+5)) + (chart_H * i) + (ch_bfr_H*i);
+    int rLSnapEntryCount = 0;
+    int rlHiLiSnapEntryCount = 0;
+    chart_Y1 = CHART_AREA_Y1 + x_axisH + (chart_H * i) + (chartBfr_H * i);
     chart_Y2 = chart_Y1 + chart_H;
     for (SnapEntry currSnapEntry : _se) {
       boolean chartMatch = false; // var to test if the currSnapEntry 'matches' and should be rendered on this chart
       if(chartDT.equals("days")){ 
-        String dayStr = DAYS_OF_WEEK[getDayOfWeekIndx(currSnapEntry.dts) - 1];      
+        String dayStr = DAYS_OF_WEEK[getDayOfWeekIndx(currSnapEntry.dts) - 1];  // switch to using the method in the snap entry object    
         if(dayStr.equals(rL)){
           chartMatch = true;
         }
@@ -258,6 +259,8 @@ void renderSMCTimeline(StringList _rLabels, ArrayList<SnapEntry> _se) {
         if(currSnapEntry.room.equals(rL)) chartMatch = true;
       }
       if(chartMatch){
+        rLSnapEntryCount += 1;
+        if(currSnapEntry.hiLiCheck()) rlHiLiSnapEntryCount += 1;
         // get the second of the day for this entry
         int secOfDay = getSecOfDay(currSnapEntry.dts);
         int dayOfWeek = getDayOfWeekIndx(currSnapEntry.dts);
@@ -275,13 +278,14 @@ void renderSMCTimeline(StringList _rLabels, ArrayList<SnapEntry> _se) {
     // Render row label 
     fill(255, 200);
     textFont(rowLabelF);
-    text(rL, chart_X1, chart_Y2);
+    text(rL + ", " +rLSnapEntryCount, chart_X1, chart_Y2);
+    if(rlHiLiSnapEntryCount > 0) text(rlHiLiSnapEntryCount, mouseX + (hiLiW/2), chart_Y2);
 
     // Render a faint horizontal line under the chart to help readability
     if (i < _rLabels.size() - 1) { // the -1 is so that we don't draw a line across the bottom
       stroke(255, 18);
       strokeWeight(.5);
-      line(chart_X1, chart_Y2 + ch_bfr_H/2, chart_X2, chart_Y2 + ch_bfr_H/2); // the *0.25 seems kind of hacky. Should be a better way of doing this
+      line(chart_X1, chart_Y2 + chartBfr_H/2, chart_X2, chart_Y2 + chartBfr_H/2); // the *0.25 seems kind of hacky. Should be a better way of doing this
     }
   }
 }
@@ -320,10 +324,10 @@ void renderHL() {
     int hlHr = floor(hLMinOfDay/60);
     int hlMin = hLMinOfDay%60;
     fill(255, 176);
-    text(nf(hlHr, 2) + ":" + nf(hlMin, 2), mouseX+20, mouseY);
+    text(nf(hlHr, 2) + ":" + nf(hlMin, 2), mouseX+hiLiW, mouseY);
     strokeWeight(.75);
     stroke(255, 176);
-    line(mouseX, mouseY, mouseX+hiLiW/2, mouseY);
+    line(mouseX, mouseY, mouseX+hiLiW+textWidth("00:00"), mouseY);
   }
 }
 
