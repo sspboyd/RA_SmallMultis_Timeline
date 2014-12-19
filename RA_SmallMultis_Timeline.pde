@@ -1,9 +1,9 @@
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.text.ParseException;
-import java.util.Map;
+import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
+import java.util.Date;
+import java.util.Map;
 
 
 //Declare Globals
@@ -74,14 +74,9 @@ void setup() {
 
   rooms = new StringList(); // list of rooms to be charted 
   rooms = loadRoomList(chartCounts); // uses the Table to select the top n rooms. This means I don't have to do it manually like the code below did.
-
   /*  Keeping this here to show how to manually select rows/charts */
    // rooms.append("Main room");
    // rooms.append("Bedroom");
-   // rooms.append("My den");
-   //rooms.append("My office at CBC");
-   //rooms.append("Outside"); 
-
 
   dayList = new StringList();
   dayList.append("Monday");
@@ -172,13 +167,9 @@ Table loadChartDTCounts(ArrayList<SnapEntry> _se) {
   t.addColumn("Count", Table.INT);
 
   for (SnapEntry currSE : _se) {
-
     String currSED = currSE.getData(chartDT); // currSED = chartSED is chart SnapEntry Data
-    // String currSED = currSE.chartDT; // currSED = chartSED is chart SnapEntry Data
-
     if (currSED != null) {
       TableRow tr = t.findRow(currSED, chartDT);
-
       if (tr == null) { // if there is no room with this name already...
         TableRow ntr = t.addRow(); // ntr = new table row
         ntr.setString(chartDT, currSED);
@@ -238,8 +229,6 @@ void renderSMCTimeline(StringList _rLabels, ArrayList<SnapEntry> _se) {
   chart_H     = (CHART_AREA_H - x_axisH) / _rLabels.size(); // textAscent included to account for top scale #s
   chartBfr_H  = chart_H * pow(PHI, 2); // salt to taste
   chart_H     = chart_H - chartBfr_H;
-  // chart_Y1  = CHART_AREA_Y1 + chart_H * i;
-  // chart_Y2  = chart_Y1 + chart_H;
 
   for (int i = 0; i < _rLabels.size (); i+=1) {
     String rL = _rLabels.get(i); // rL = row label
@@ -247,9 +236,11 @@ void renderSMCTimeline(StringList _rLabels, ArrayList<SnapEntry> _se) {
     int rlHiLiSnapEntryCount = 0;
     chart_Y1 = CHART_AREA_Y1 + x_axisH + (chart_H * i) + (chartBfr_H * i);
     chart_Y2 = chart_Y1 + chart_H;
+
     for (SnapEntry currSnapEntry : _se) {
       boolean chartMatch = false; // var to test if the currSnapEntry 'matches' and should be rendered on this chart
-      if(chartDT.equals("days")){ 
+
+      if(chartDT.equals("days")){ // maybe use case/switch here instead?
         String dayStr = currSnapEntry.getDoW();
         if(dayStr.equals(rL)){
           chartMatch = true;
@@ -258,6 +249,7 @@ void renderSMCTimeline(StringList _rLabels, ArrayList<SnapEntry> _se) {
       if(chartDT.equals("room")){
         if(currSnapEntry.room.equals(rL)) chartMatch = true;
       }
+
       if(chartMatch){
         rLSnapEntryCount += 1;
         if(currSnapEntry.hiLiCheck()) rlHiLiSnapEntryCount += 1;
@@ -305,7 +297,6 @@ void renderTitle() {
   dateCpy += smcSnapList.size() + " reports. ";
 
   text(dateCpy, PLOT_X1, txtY2);
-  // text("Which room are you in?", PLOT_X1, PLOT_Y1+textAscent()*2);
 }
 
 
@@ -314,8 +305,6 @@ void renderHL() {
   fill(255, 11);
   strokeWeight(.25);
   line(mouseX, CHART_AREA_Y1, mouseX, CHART_AREA_Y2);
-  // noFill();
-  // ellipse(mouseX, mouseY, 100, 100);
   noStroke();
   rect(mouseX-20, CHART_AREA_Y1, 40, CHART_AREA_H);
 
