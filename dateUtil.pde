@@ -44,3 +44,9 @@ int daysBtwn(Date _o, Date _n) {
   // println("!!! Amount of days : " + String.valueOf(days));
 }
 
+String getToD(float _mx){ // using _mx because I am expecting to be passing a var based off the mouseX position
+    int minOfDay = floor(map(_mx, CHART_AREA_X1 + CHART_AREA_W * pow(PHI, 4), CHART_AREA_X2, 0, 1439)); // 1439 is number of minutes in a day -1
+    int hr = floor(minOfDay / 60);
+    int mint = minOfDay % 60; // using 'mint' because 'min' is often used for minimum functions
+    return nf(hr, 2) + ":" + nf(mint, 2);
+}
