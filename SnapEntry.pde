@@ -15,7 +15,7 @@ class SnapEntry {
 
   float h; // height
   color clr = color(76, 76, 255, 120);
-  color hiLiClr = color(255, 255, 255, 100);
+  color hiLiClr = color(255, 255, 255, 76);
 
   PVector pos = new PVector();
   PVector targetPos = new PVector();

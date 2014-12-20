@@ -11,6 +11,7 @@ final float PHI = 0.618033989;
 
 // Declare Font Variables
 PFont mainTitleF;
+PFont dataLabelF;
 PFont rowLabelF;
 
 // Declare Positioning Variables
@@ -66,6 +67,7 @@ void setup() {
   CHART_AREA_H  = CHART_AREA_Y2 - CHART_AREA_Y1;
 
   rowLabelF   = loadFont("HelveticaNeue-14.vlw");  //requires a font file in the data folder?
+  dataLabelF  = loadFont("HelveticaNeue-Medium-18.vlw");  //requires a font file in the data folder?
   mainTitleF  = loadFont("HelveticaNeue-Light-36.vlw");  //requires a font file in the data folder?
 
   snapList = loadSnapEntries("reporter-export-20141129.json"); // The loadSnapEntries() function will take the snapshots JSONArray and create an ArrayList of SnapEntries
@@ -271,7 +273,12 @@ void renderSMCTimeline(StringList _rLabels, ArrayList<SnapEntry> _se) {
     fill(255, 200);
     textFont(rowLabelF);
     text(rL + ", " +rLSnapEntryCount, chart_X1, chart_Y2);
-    if(rlHiLiSnapEntryCount > 0) text(rlHiLiSnapEntryCount, mouseX + (hiLiW/2), chart_Y2);
+
+    // Render highlighted SnapEntry count
+    if(rlHiLiSnapEntryCount > 0) {
+      textFont(dataLabelF);
+      text(str(rlHiLiSnapEntryCount), mouseX - textWidth(str(rlHiLiSnapEntryCount)) / 2, chart_Y2);
+    }
 
     // Render a faint horizontal line under the chart to help readability
     if (i < _rLabels.size() - 1) { // the -1 is so that we don't draw a line across the bottom
@@ -304,19 +311,22 @@ void renderHL() {
   stroke(255, 176);
   fill(255, 11);
   strokeWeight(.25);
-  line(mouseX, CHART_AREA_Y1, mouseX, CHART_AREA_Y2);
+  line(mouseX - hiLiW/2 , CHART_AREA_Y1, mouseX - hiLiW/2, CHART_AREA_Y2);
+  line(mouseX + hiLiW/2 , CHART_AREA_Y1, mouseX + hiLiW/2, CHART_AREA_Y2);
   noStroke();
   rect(mouseX-20, CHART_AREA_Y1, 40, CHART_AREA_H);
 
   if ((mouseX>CHART_AREA_X1 + CHART_AREA_W * pow(PHI, 4)) && (mouseX<CHART_AREA_X2) && (mouseY>CHART_AREA_Y1) && (mouseY < CHART_AREA_Y2)) {
-    int hLMinOfDay = floor(map(mouseX, CHART_AREA_X1 + CHART_AREA_W * pow(PHI, 4), CHART_AREA_X2, 0, 1439));
-    int hlHr = floor(hLMinOfDay/60);
-    int hlMin = hLMinOfDay%60;
+    String toDE = getToD(mouseX - (hiLiW / 2)); // toDE = time of Day Earlier
+    String toDL = getToD(mouseX + (hiLiW / 2)); // toDL = time of Day Later
     fill(255, 176);
-    text(nf(hlHr, 2) + ":" + nf(hlMin, 2), mouseX+hiLiW, mouseY);
+    textFont(rowLabelF);
+    text(toDE, mouseX - hiLiW - textWidth("00:00"), mouseY + (textAscent() / 2));
+    text(toDL, mouseX + hiLiW, mouseY + textAscent() / 2);
     strokeWeight(.75);
     stroke(255, 176);
-    line(mouseX, mouseY, mouseX+hiLiW+textWidth("00:00"), mouseY);
+    line(mouseX - (hiLiW / 2), mouseY, mouseX - hiLiW , mouseY);
+    line(mouseX + (hiLiW / 2), mouseY, mouseX + (hiLiW), mouseY);
   }
 }
 
