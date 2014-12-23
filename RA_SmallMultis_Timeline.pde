@@ -32,6 +32,7 @@ StringList dayList; // list of days to be graphed
 
 // String chartDT = "room"; // chartDT = chart Data Type eg. days, room, person, location, doing
 String chartDT = "location"; // chartDT = chart Data Type eg. days, room, person, location, doing
+// String chartDT = "person"; // chartDT = chart Data Type eg. days, room, person, location, doing
 // String chartDT = "days"; // chartDT = chart Data Type eg. days, room, person, location, doing
 StringList chartRL; // chartRL = Chart Row List; 
 
@@ -144,6 +145,26 @@ ArrayList<SnapEntry> loadSMCSnapList(StringList _rLabels, String _dt){ // _rLabe
       }
     }
 
+  }else if(_dt.equals("person")){
+    for (SnapEntry currSnap : snapList) {
+      StringList ppl = currSnap.whoAreYouWith;
+      // println("ppl: "+ppl);
+      if(ppl != null){
+        for (String rl : _rLabels) {
+          println("rl: "+rl);
+          for (String per : ppl) {
+            println("per: "+per);
+            if(per.equals(rl)){
+              if(!newSMCSnapList.contains(currSnap)){
+                // println("ppl: "+ppl);
+                newSMCSnapList.add(currSnap);
+              }     
+            }
+          }  
+        }
+      }
+    }
+
   }else if (_dt.equals("location")) {
     for (SnapEntry currSnap : snapList) {
       String currLoc = currSnap.location;
@@ -168,6 +189,7 @@ ArrayList<SnapEntry> loadSMCSnapList(StringList _rLabels, String _dt){ // _rLabe
       }
     }
   }
+  println("newSMCSnapList.size(): "+newSMCSnapList.size());
   return newSMCSnapList;
 }
 
@@ -263,6 +285,11 @@ void renderSMCTimeline(StringList _rLabels, ArrayList<SnapEntry> _se) {
 
       if(chartDT.equals("location")){
         if(currSnapEntry.location.equals(rL)) chartMatch = true;
+      }
+
+      if(chartDT.equals("person")){
+        if(currSnapEntry.whoAreYouWith.hasValue(rL)) chartMatch = true;
+        // println("chartMatch!!!!!!!!!!!!!!!!!: "+chartMatch);
       }
 
       if(chartMatch){

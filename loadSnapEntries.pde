@@ -3,8 +3,8 @@ ArrayList<SnapEntry> loadSnapEntries(String _dataFile) {
   raj = loadJSONObject(_dataFile); // this file has to be in your /data directory. I've included a small sample file.
   JSONArray _snapshots = raj.getJSONArray("snapshots"); // This is the variable that holds all the 'snapshots' recorded by Reporter App. 
 
-
   ArrayList<SnapEntry> _snapList = new ArrayList();
+
 
   for (int i = 0; i < _snapshots.size (); i+=1) { // iterate through every snapshot in the snapshots array...
     JSONObject snap = _snapshots.getJSONObject(i); // create a new json object (snap) with the current snapshot
@@ -27,17 +27,35 @@ ArrayList<SnapEntry> loadSnapEntries(String _dataFile) {
         // println("resp question: " + question);
       }
 
-      if (questionPrompt.equals("Which room are you in?") == true) { // check to see if the questionPrompt string matches the question we're looking for...
+      if (questionPrompt.equals("Who are you with?") == true) { // check to see if the questionPrompt string matches the question we're looking for...
+        // println("date: "+sdts);
         // One of the answer types is "answeredOptions"
         // if (resp.hasKey("answeredOptions")) {  // again, check to see if the resp JSONObject has a key called "answeredOptions"
         // }
+        if (resp.hasKey("tokens")) {  // again, check to see if the resp JSONObject has a key called "tokens"
+          JSONArray ans = resp.getJSONArray("tokens"); // create another JSONArray of the answers
+          if (ans.size() > 0) {
+            for (int k = 0; k < ans.size(); k++) {
+              JSONObject ansPers = ans.getJSONObject(k);
+              String per = ansPers.getString("text");
+              if(per != null){
+                // println("per: "+per);
+                s.whoAreYouWith.append(per);
+              }
+            }
+          }
+        }else {
+          s.whoAreYouWith.append("No One");
+        }
+      }
+
+      if (questionPrompt.equals("Which room are you in?") == true) { // check to see if the questionPrompt string matches the question we're looking for...
         if (resp.hasKey("tokens")) {  // again, check to see if the resp JSONObject has a key called "tokens"
           JSONArray ans = resp.getJSONArray("tokens"); // create another JSONArray of the answers
           if (ans.size() > 1) println("ans @ " + sdts + " has more than one room: \n" + ans);
           if (ans.size() < 1) println("ans has no rooms! ->" + ans);
           if (ans.size() > 0) {
             JSONObject ansRm = ans.getJSONObject(0);
-            // println("ansRm: "+ansRm);
             String rm = ansRm.getString("text");
             s.room = rm;
           }
@@ -53,6 +71,7 @@ ArrayList<SnapEntry> loadSnapEntries(String _dataFile) {
         }
       }
     }
+    // println("s.whoAreYouWith: "+s.whoAreYouWith);
     _snapList.add(s);
   }
   return _snapList;

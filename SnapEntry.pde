@@ -7,6 +7,7 @@ class SnapEntry {
   // Question Data
   boolean scrn; // Are you in front of a screen
   StringList whoAreYouWith; // Who are you with?
+  StringList doing;
   String room; // What room are you in
   String dateString;
   String location;
@@ -85,7 +86,7 @@ class SnapEntry {
     return dow;
   }
 
-  String getData(String _dt){
+  String getData(String _dt){ // this doesn't work for whoAreYouWith or doing variables. Maybe turn everything into a StringList?
     // println("_dt: "+_dt);
     String currDT="";
     if(_dt.equals("room")) currDT = getRoom();
