@@ -9,15 +9,16 @@ class SnapEntry {
   StringList whoAreYouWith; // Who are you with?
   String room; // What room are you in
   String dateString;
+  String location;
   Date dts; // Java date type version of the dateString var.
 
   int born;
 
   float h; // height
-  color clr = color(76, 76, 255, 120);
+  color clr = color(76, 76, 255, 123);
   color hiLiClr = color(255, 255, 255, 76);
 
-  PVector pos = new PVector();
+  PVector pos = new PVector(random(-width*1000), random(-height*1000));
   PVector targetPos = new PVector();
 
   color col = 255;
@@ -28,7 +29,7 @@ class SnapEntry {
 
   void update() {
     pos.x += (targetPos.x - pos.x) * .1;
-    pos.y += (targetPos.y - pos.y) * .5;
+    pos.y += (targetPos.y - pos.y) * .1;
 
     stroke(clr);
     strokeWeight(5);
@@ -75,6 +76,10 @@ class SnapEntry {
     return room;
   }
 
+  String getLocation(){
+    return location;
+  }
+
   String getDoW(){
     String dow = DAYS_OF_WEEK[getDayOfWeekIndx(dts) - 1];
     return dow;
@@ -84,6 +89,7 @@ class SnapEntry {
     // println("_dt: "+_dt);
     String currDT="";
     if(_dt.equals("room")) currDT = getRoom();
+    if(_dt.equals("location")) currDT = getLocation();
     if(_dt.equals("days")) currDT = getDoW();
     return currDT;
   }

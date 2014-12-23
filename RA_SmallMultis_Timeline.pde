@@ -30,9 +30,8 @@ StringList rooms; // list of rooms to be graphed
 String[] DAYS_OF_WEEK = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 StringList dayList; // list of days to be graphed
 
-String q = "Which room are you in?";
-
-String chartDT = "room"; // chartDT = chart Data Type eg. days, room, person, location, doing
+// String chartDT = "room"; // chartDT = chart Data Type eg. days, room, person, location, doing
+String chartDT = "location"; // chartDT = chart Data Type eg. days, room, person, location, doing
 // String chartDT = "days"; // chartDT = chart Data Type eg. days, room, person, location, doing
 StringList chartRL; // chartRL = Chart Row List; 
 
@@ -45,12 +44,11 @@ StringList chartRL; // chartRL = Chart Row List;
  ////////////////////////////////////////*/
 
 void setup() {
-  background(29);
   size(1300, 650);
   // size(1900, 1000); // resolution for iMac
   smooth(4);
 
-  margin = width * pow(PHI, 7);
+  margin = width * pow(PHI, 6);
 
   PLOT_X1       = margin;
   PLOT_X2       = width - margin;
@@ -66,13 +64,13 @@ void setup() {
   CHART_AREA_W  = CHART_AREA_X2 - CHART_AREA_X1;
   CHART_AREA_H  = CHART_AREA_Y2 - CHART_AREA_Y1;
 
-  rowLabelF   = loadFont("HelveticaNeue-14.vlw");  //requires a font file in the data folder?
-  dataLabelF  = loadFont("HelveticaNeue-Medium-18.vlw");  //requires a font file in the data folder?
-  mainTitleF  = loadFont("HelveticaNeue-Light-36.vlw");  //requires a font file in the data folder?
+  rowLabelF   = loadFont("HelveticaNeue-14.vlw");  //requires a font file in the data folder
+  dataLabelF  = loadFont("HelveticaNeue-Medium-18.vlw");  //requires a font file in the data folder
+  mainTitleF  = loadFont("HelveticaNeue-Light-36.vlw");  //requires a font file in the data folder
 
-  snapList = loadSnapEntries("reporter-export-20141129.json"); // The loadSnapEntries() function will take the snapshots JSONArray and create an ArrayList of SnapEntries
+  snapList = loadSnapEntries("reporter-export-20141129-clean.json"); // The loadSnapEntries() function will take the snapshots JSONArray and create an ArrayList of SnapEntries
 
-  Table chartCounts = loadChartDTCounts(snapList); // every room with its count/frequency in a sorted table
+  Table chartCounts = loadChartDTCounts(snapList); // every row with its count/frequency in a sorted table
 
   rooms = new StringList(); // list of rooms to be charted 
   rooms = loadRoomList(chartCounts); // uses the Table to select the top n rooms. This means I don't have to do it manually like the code below did.
@@ -115,10 +113,9 @@ void setup() {
  ////////////////////////////////////////*/
 
 void draw() {
-  background(29);
+  background(7,18,29);
   renderTitle();
   renderTimelineScale(); // horizontal scale (0-24hrs)
-  // renderSMCTimeline(rooms, smcSnapList);
   renderSMCTimeline(chartRL, smcSnapList);
   renderHL();
   renderSspb();
@@ -141,6 +138,18 @@ ArrayList<SnapEntry> loadSMCSnapList(StringList _rLabels, String _dt){ // _rLabe
       if(currRoom != null){
         for (String rl : _rLabels) {
           if(currRoom.equals(rl)){
+            newSMCSnapList.add(currSnap);
+          }
+        }
+      }
+    }
+
+  }else if (_dt.equals("location")) {
+    for (SnapEntry currSnap : snapList) {
+      String currLoc = currSnap.location;
+      if(currLoc != null){
+        for (String rl : _rLabels) {
+          if(currLoc.equals(rl)){
             newSMCSnapList.add(currSnap);
           }
         }
@@ -252,6 +261,10 @@ void renderSMCTimeline(StringList _rLabels, ArrayList<SnapEntry> _se) {
         if(currSnapEntry.room.equals(rL)) chartMatch = true;
       }
 
+      if(chartDT.equals("location")){
+        if(currSnapEntry.location.equals(rL)) chartMatch = true;
+      }
+
       if(chartMatch){
         rLSnapEntryCount += 1;
         if(currSnapEntry.hiLiCheck()) rlHiLiSnapEntryCount += 1;
@@ -278,13 +291,22 @@ void renderSMCTimeline(StringList _rLabels, ArrayList<SnapEntry> _se) {
     if(rlHiLiSnapEntryCount > 0) {
       textFont(dataLabelF);
       text(str(rlHiLiSnapEntryCount), mouseX - textWidth(str(rlHiLiSnapEntryCount)) / 2, chart_Y2);
+
+    // Render row label 
+    fill(255, 155);
+    textFont(rowLabelF);
+    // text(rL, mouseX - textWidth(rL)-hiLiW*PHI, chart_Y2);
+
+    fill(255, 11);
+    noStroke();
+    rect(chart_X1, chart_Y1, chart_W, chart_H);
     }
 
     // Render a faint horizontal line under the chart to help readability
     if (i < _rLabels.size() - 1) { // the -1 is so that we don't draw a line across the bottom
       stroke(255, 18);
       strokeWeight(.5);
-      line(chart_X1, chart_Y2 + chartBfr_H/2, chart_X2, chart_Y2 + chartBfr_H/2); // the *0.25 seems kind of hacky. Should be a better way of doing this
+      // line(chart_X1, chart_Y2 + chartBfr_H/2, chart_X2, chart_Y2 + chartBfr_H/2); // the *0.25 seems kind of hacky. Should be a better way of doing this
     }
   }
 }
@@ -308,9 +330,9 @@ void renderTitle() {
 
 
 void renderHL() {
-  stroke(255, 176);
-  fill(255, 11);
-  strokeWeight(.25);
+  stroke(76, 76, 255, 120);
+  fill(255, 18);
+  strokeWeight(.5);
   line(mouseX - hiLiW/2 , CHART_AREA_Y1, mouseX - hiLiW/2, CHART_AREA_Y2);
   line(mouseX + hiLiW/2 , CHART_AREA_Y1, mouseX + hiLiW/2, CHART_AREA_Y2);
   noStroke();
@@ -321,8 +343,8 @@ void renderHL() {
     String toDL = getToD(mouseX + (hiLiW / 2)); // toDL = time of Day Later
     fill(255, 176);
     textFont(rowLabelF);
-    text(toDE, mouseX - hiLiW - textWidth("00:00"), mouseY + (textAscent() / 2));
-    text(toDL, mouseX + hiLiW, mouseY + textAscent() / 2);
+    text(toDE, mouseX - hiLiW - textWidth("00:00"), mouseY);
+    text(toDL, mouseX + hiLiW, mouseY);
     strokeWeight(.75);
     stroke(255, 176);
     line(mouseX - (hiLiW / 2), mouseY, mouseX - hiLiW , mouseY);

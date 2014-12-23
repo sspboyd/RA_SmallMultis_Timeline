@@ -26,7 +26,8 @@ ArrayList<SnapEntry> loadSnapEntries(String _dataFile) {
         questionPrompt = resp.getString("questionPrompt");
         // println("resp question: " + question);
       }
-      if (questionPrompt.equals(q) == true) { // check to see if the questionPrompt string matches the question we're looking for...
+
+      if (questionPrompt.equals("Which room are you in?") == true) { // check to see if the questionPrompt string matches the question we're looking for...
         // One of the answer types is "answeredOptions"
         // if (resp.hasKey("answeredOptions")) {  // again, check to see if the resp JSONObject has a key called "answeredOptions"
         // }
@@ -40,6 +41,15 @@ ArrayList<SnapEntry> loadSnapEntries(String _dataFile) {
             String rm = ansRm.getString("text");
             s.room = rm;
           }
+        }
+      }
+
+      if (questionPrompt.equals("Where are you?") == true) { // check to see if the questionPrompt string matches the question we're looking for...
+        if (resp.hasKey("locationResponse")) {  // again, check to see if the resp JSONObject has a key called "tokens"
+          JSONObject locResp = resp.getJSONObject("locationResponse");
+          // if(locResp.hasKey("text")){
+            s.location = locResp.getString("text");
+          //}
         }
       }
     }
