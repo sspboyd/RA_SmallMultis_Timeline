@@ -86,12 +86,45 @@ class SnapEntry {
     return dow;
   }
 
+  StringList getRoomL(){
+    StringList roomL = new StringList();
+    roomL.append(room);
+    return roomL;
+  }
+
+  StringList getLocationL(){
+    StringList locL = new StringList();;
+    locL.append(location);
+    return locL;
+  }
+
+  StringList getDoWL(){
+    StringList dowL = new StringList();;
+    String dow = DAYS_OF_WEEK[getDayOfWeekIndx(dts) - 1];
+    dowL.append(dow);
+    return dowL;
+  }
+
+  StringList getPpl(){
+    return whoAreYouWith;
+  }
+
+  
+
   String getData(String _dt){ // this doesn't work for whoAreYouWith or doing variables. Maybe turn everything into a StringList?
-    // println("_dt: "+_dt);
-    String currDT="";
+    String currDT = "";
     if(_dt.equals("room")) currDT = getRoom();
     if(_dt.equals("location")) currDT = getLocation();
     if(_dt.equals("days")) currDT = getDoW();
     return currDT;
+  }
+
+  StringList getDataL(String _dt){ // this doesn't work for whoAreYouWith or doing variables. Maybe turn everything into a StringList?
+    StringList sed = new StringList(); // sed = snap entry data
+    if(_dt.equals("room")) sed = getRoomL();
+    if(_dt.equals("location")) sed = getLocationL();
+    if(_dt.equals("days")) sed = getDoWL();
+    if(_dt.equals("person")) sed = getPpl();
+    return sed;
   }
 }

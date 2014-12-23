@@ -148,15 +148,11 @@ ArrayList<SnapEntry> loadSMCSnapList(StringList _rLabels, String _dt){ // _rLabe
   }else if(_dt.equals("person")){
     for (SnapEntry currSnap : snapList) {
       StringList ppl = currSnap.whoAreYouWith;
-      // println("ppl: "+ppl);
       if(ppl != null){
         for (String rl : _rLabels) {
-          println("rl: "+rl);
           for (String per : ppl) {
-            println("per: "+per);
             if(per.equals(rl)){
               if(!newSMCSnapList.contains(currSnap)){
-                // println("ppl: "+ppl);
                 newSMCSnapList.add(currSnap);
               }     
             }
@@ -200,16 +196,21 @@ Table loadChartDTCounts(ArrayList<SnapEntry> _se) {
   t.addColumn("Count", Table.INT);
 
   for (SnapEntry currSE : _se) {
-    String currSED = currSE.getData(chartDT); // currSED = chartSED is chart SnapEntry Data
+    StringList currSED = currSE.getDataL(chartDT); // currSED = chartSED is chart SnapEntry Data
+    // String currSED = currSE.getData(chartDT); // currSED = chartSED is chart SnapEntry Data
     if (currSED != null) {
-      TableRow tr = t.findRow(currSED, chartDT);
-      if (tr == null) { // if there is no room with this name already...
-        TableRow ntr = t.addRow(); // ntr = new table row
-        ntr.setString(chartDT, currSED);
-        ntr.setInt("Count", 1);
-      } else {
-        int currCnt = tr.getInt("Count");
-        tr.setInt("Count", ++currCnt);
+      for (String d : currSED) {  
+        TableRow tr = t.findRow(d, chartDT);
+        // TableRow tr = t.findRow(currSED, chartDT);
+        if (tr == null) { // if there is no room with this name already...
+          TableRow ntr = t.addRow(); // ntr = new table row
+          ntr.setString(chartDT, d);
+          // ntr.setString(chartDT, currSED);
+          ntr.setInt("Count", 1);
+        } else {
+          int currCnt = tr.getInt("Count");
+          tr.setInt("Count", ++currCnt);
+        }
       }
     }
   } 
@@ -222,7 +223,7 @@ StringList loadRoomList(Table _t) {
   for (int i = 0; i < _t.getRowCount (); i++) {
     // for (int i = 0; i < 10; i++) {
     TableRow r = _t.getRow(i);
-    if (r.getInt("Count") > 5) { // only return rooms with more than n reports
+    if (r.getInt("Count") > 4) { // only return rooms with more than n reports
       rmList.append(r.getString(chartDT));
     }
   }
