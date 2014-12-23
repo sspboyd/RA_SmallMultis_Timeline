@@ -24,11 +24,9 @@ ArrayList<SnapEntry> loadSnapEntries(String _dataFile) {
       JSONObject resp = resps.getJSONObject(j); // Create a new json object called resp to grab each of the responses individually
       if (resp.hasKey("questionPrompt")) {  // test to make sure there is a question prompt associated with this response. I've found a few times that responses are missing question prompts!
         questionPrompt = resp.getString("questionPrompt");
-        // println("resp question: " + question);
       }
 
       if (questionPrompt.equals("Who are you with?") == true) { // check to see if the questionPrompt string matches the question we're looking for...
-        // println("date: "+sdts);
         // One of the answer types is "answeredOptions"
         // if (resp.hasKey("answeredOptions")) {  // again, check to see if the resp JSONObject has a key called "answeredOptions"
         // }
@@ -39,7 +37,6 @@ ArrayList<SnapEntry> loadSnapEntries(String _dataFile) {
               JSONObject ansPers = ans.getJSONObject(k);
               String per = ansPers.getString("text");
               if(per != null){
-                // println("per: "+per);
                 s.whoAreYouWith.append(per);
               }
             }
@@ -71,7 +68,6 @@ ArrayList<SnapEntry> loadSnapEntries(String _dataFile) {
         }
       }
     }
-    // println("s.whoAreYouWith: "+s.whoAreYouWith);
     _snapList.add(s);
   }
   return _snapList;

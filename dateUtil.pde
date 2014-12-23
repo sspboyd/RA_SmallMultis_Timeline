@@ -41,7 +41,6 @@ Date getNewestDate(ArrayList<SnapEntry> _se) {
 // This is function isn't 100% reliable since it doesn't account for Daylight Savings or Leap years.
 int daysBtwn(Date _o, Date _n) { 
   return (int)TimeUnit.MILLISECONDS.toDays(_n.getTime() - _o.getTime());
-  // println("!!! Amount of days : " + String.valueOf(days));
 }
 
 String getToD(float _mx){ // using _mx because I am expecting to be passing a var based off the mouseX position
